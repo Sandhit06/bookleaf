@@ -1,6 +1,7 @@
 require('dotenv').config();
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const crypto = require('crypto');
 const express = require('express');
 const cors = require('cors');
@@ -18,8 +19,28 @@ app.use(express.json({ limit: '2mb' }));
 const seedPath = path.join(__dirname, 'db', 'bookleaf_sample_data.json');
 const seedData = JSON.parse(fs.readFileSync(seedPath, 'utf-8'));
 
-const dataDir = process.env.DATA_DIR || path.join(__dirname, 'db');
-fs.mkdirSync(dataDir, { recursive: true });
+const isRender = Boolean(process.env.RENDER);
+const defaultDataDir = isRender
+  ? path.join(os.tmpdir(), 'bookleaf-data')
+  : path.join(__dirname, 'db');
+const dataDir = process.env.DATA_DIR || defaultDataDir;
+try {
+  fs.mkdirSync(dataDir, { recursive: true });
+} catch (error) {
+  if (error.code === 'EACCES' || error.code === 'EPERM') {
+    throw new Error(
+      `DATA_DIR "${dataDir}" is not writable. On Render Free, set DATA_DIR=/tmp/bookleaf-data. ` +
+      'Free instance files are temporary and are cleared when the service sleeps, restarts, or redeploys.',
+      { cause: error }
+    );
+  }
+  throw error;
+}
+const tempRoot = path.resolve(os.tmpdir());
+const resolvedDataDir = path.resolve(dataDir);
+if (isRender && (resolvedDataDir === tempRoot || resolvedDataDir.startsWith(`${tempRoot}${path.sep}`))) {
+  console.warn(`[storage] Ticket data is using temporary storage at ${resolvedDataDir}; Render Free may clear it on sleep, restart, or redeploy.`);
+}
 const ticketStorePath = path.join(dataDir, 'tickets.json');
 let tickets = [];
 try {

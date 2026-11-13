@@ -55,23 +55,27 @@ The server selects a policy section from the query intent and includes only that
 
 The demo uses one shared password for seeded accounts and a JSON ticket store. Do not use these choices for real author accounts or multi-instance production. For a real service, add per-user password hashes/managed identity, PostgreSQL migrations and transactions, object storage for uploads, audit history, rate limiting, and a shared event broker.
 
-## Deploy on Render (recommended)
+## Deploy on Render Free
 
-Render is a good fit for the current architecture because it runs the persistent Node process, serves the UI and API together, supports SSE, and can attach a persistent disk for the ticket file.
+The frontend and API run together as one Node web service. For a Render Free demo deployment:
 
-1. Keep the repository private as required by the assessment. Connect that private repository when creating a Render **Web Service**.
-2. Select Node. Set build command to `npm ci` and start command to `npm start`.
-3. Add a persistent disk mounted at `/var/data`. Set these service environment variables:
+1. Connect the repository to a Render **Web Service**. Keep **Root Directory** blank so Render uses the repository root.
+2. Set **Build Command** to `npm ci` and **Start Command** to `npm start`.
+3. Set these environment variables in the service's **Environment** page:
    - `NODE_ENV=production`
-   - `DATA_DIR=/var/data`
-   - `JWT_SECRET` to a randomly generated value of at least 32 characters
-   - `DEMO_PASSWORD` to a strong, unique password for the demo
+   - `DATA_DIR=/tmp/bookleaf-data`
+   - `JWT_SECRET` to a unique, cryptographically random string of at least 32 characters
+   - `DEMO_PASSWORD` to a strong, unique demo password
    - `OPENAI_API_KEY` (optional; without it the local fallback is used)
    - `OPENAI_MODEL=gpt-4o-mini` (optional)
-4. Set the health check path to `/api/v1/health`. Deploy and confirm it returns `{"status":"ok"}`.
-5. Open the Render service URL, then sign in with a seeded author email or `admin@bookleaf.in` and the `DEMO_PASSWORD` configured in step 3. Keep the password available for evaluator handoff.
+4. Do not set `PORT`; Render supplies it. Set the health check path to `/api/v1/health`.
+5. Deploy. Open the service URL and confirm `/api/v1/health` returns `{"status":"ok"}`. Open `/` to use the frontend, then sign in with a seeded author email or `admin@bookleaf.in` and the configured `DEMO_PASSWORD`.
 
-The default port is 4000 locally; the server honors the `PORT` variable supplied by the host. The current UI uses same-origin API paths and should be served by this same Node service. A separately hosted frontend needs an API base URL configuration and is not supported by the current build.
+The server defaults to `/tmp/bookleaf-data` on Render when `DATA_DIR` is omitted. The path is writable on the Free instance, so the app can start and tickets can be created, replied to, and triaged during that running instance. **This is temporary storage:** Render Free clears local files when a service sleeps, restarts, or redeploys. Tickets may therefore disappear, including after the service spins down while idle. Do not use this configuration when ticket history must be durable. Render Free services also spin down after 15 minutes without inbound traffic and can take about a minute to start again.
+
+Render Free cannot attach persistent disks. To keep the JSON ticket file across restarts, move the web service to a paid compute plan and mount a disk at `/var/data`, then set `DATA_DIR=/var/data`. Alternatively, the project needs a database-backed storage adapter to use a managed database. The current server does not yet read/write tickets from PostgreSQL; Render's Free Postgres also expires 30 days after creation, so it is not durable long-term storage.
+
+The default port is 4000 locally; the server honors the `PORT` variable supplied by the host. The current UI uses same-origin API paths and must be served by this same Node service. A separately hosted frontend needs an API base URL configuration and is not supported by the current build.
 
 ### Other hosting platforms
 

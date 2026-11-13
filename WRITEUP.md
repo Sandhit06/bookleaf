@@ -8,7 +8,7 @@ The supplied 10-author, 18-book dataset is served by the backend. The author por
 
 ## Trade-offs and current limits
 
-To keep the assessment prototype small, ticket persistence uses an atomic JSON file instead of a database; this is suitable for one demo instance and not concurrent or horizontally scaled workloads. Ticket attachments retain metadata only; the file is not uploaded. Retail/print partner actions are not integrated, and the stock availability workflow creates a support request for the team. No live URL has been deployed from this workspace.
+To keep the assessment prototype small, ticket persistence uses an atomic JSON file instead of a database; this is suitable for one demo instance and not concurrent or horizontally scaled workloads. On Render Free, the JSON file lives in temporary storage and can be cleared whenever the service sleeps, restarts, or redeploys. Ticket attachments retain metadata only; the file is not uploaded. Retail/print partner actions are not integrated, and the stock availability workflow creates a support request for the team. No live URL has been deployed from this workspace.
 
 ## Production evolution
 

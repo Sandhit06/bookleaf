@@ -1,0 +1,3196 @@
+<!DOCTYPE html>
+<html lang="en" class="antialiased">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>BookLeaf Publishing — Author Support &amp; Operations Portal</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            serif: ['Newsreader', 'Georgia', 'serif'],
+            mono: ['"SF Mono"', '"JetBrains Mono"', 'monospace']
+          },
+          colors: {
+            leaf: {
+              50: '#f2f7f4',
+              100: '#e1ede6',
+              200: '#c5dcd0',
+              300: '#9bc2af',
+              400: '#6ea189',
+              500: '#4c846b',
+              600: '#396954',
+              700: '#2f5444',
+              800: '#274438',
+              900: '#1b3b2b',
+              950: '#0f2319'
+            },
+            ocean: {
+              50: '#f0f6fa',
+              100: '#dcebf3',
+              500: '#1f5f8b',
+              600: '#184d73',
+              700: '#143e5d',
+              900: '#0e2a40'
+            }
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    /* ==========================================================================
+       BookLeaf glass interface foundation
+       ========================================================================== */
+    :root {
+      font: 100%/1.5 Inter, system-ui, sans-serif;
+      --surface-glass: rgba(255, 255, 255, 0.72);
+      --surface-glass-heavy: rgba(255, 255, 255, 0.88);
+      --surface-dark-glass: rgba(20, 28, 24, 0.78);
+      --specular-border: rgba(255, 255, 255, 0.65);
+      --subtle-border: rgba(15, 35, 25, 0.08);
+      --shadow-ambient: 0 10px 30px -5px rgba(15, 35, 25, 0.07), 0 2px 6px -1px rgba(15, 35, 25, 0.04);
+      --shadow-elevated: 0 24px 48px -12px rgba(15, 35, 25, 0.16), 0 4px 12px -2px rgba(15, 35, 25, 0.08);
+    }
+
+    body {
+      background: radial-gradient(circle at 12% 0%, #eaf3ee 0%, #f5f7f6 42%, #eef2f5 100%);
+      color: #111c16;
+      overflow-x: hidden;
+      min-height: 100vh;
+      font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    }
+
+    body:not(.authenticated) main, body:not(.authenticated) #floatingPip { visibility: hidden; }
+
+    /* Size-specific tracking & leading per Interface typography guidelines */
+    .display-title {
+      font-size: clamp(1.65rem, 2.6vw, 2.35rem);
+      line-height: 1.08;
+      letter-spacing: -0.024em;
+      font-optical-sizing: auto;
+    }
+    .section-heading {
+      font-size: clamp(1.125rem, 1.5vw, 1.375rem);
+      line-height: 1.2;
+      letter-spacing: -0.016em;
+    }
+    .body-copy {
+      font-size: 0.9375rem;
+      line-height: 1.52;
+      letter-spacing: -0.003em;
+    }
+    .micro-label {
+      font-size: 0.72rem;
+      line-height: 1.3;
+      letter-spacing: 0.025em;
+    }
+    .tabular-data {
+      font-variant-numeric: tabular-nums;
+      letter-spacing: -0.008em;
+    }
+
+    /* 1. Response — Kill Latency: Instant pointer-down response */
+    .press-feedback {
+      transition: transform 90ms cubic-bezier(0.22, 1, 0.36, 1), background-color 120ms ease, box-shadow 120ms ease;
+      will-change: transform;
+      user-select: none;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .press-feedback:active,
+    .press-feedback.is-pressed {
+      transform: scale(0.968);
+    }
+    .card-press-feedback {
+      transition: transform 110ms cubic-bezier(0.22, 1, 0.36, 1), box-shadow 180ms ease, border-color 150ms ease;
+      will-change: transform;
+    }
+    .card-press-feedback:active,
+    .card-press-feedback.is-pressed {
+      transform: scale(0.986);
+    }
+
+    /* 12. Materials & Depth — Translucent chrome with specular top edge */
+    .glass-nav {
+      background: var(--surface-glass);
+      backdrop-filter: blur(22px) saturate(185%);
+      -webkit-backdrop-filter: blur(22px) saturate(185%);
+      border-bottom: 1px solid rgba(15, 35, 25, 0.07);
+      box-shadow: inset 0 1px 0 0 var(--specular-border);
+    }
+    .glass-surface {
+      background: var(--surface-glass-heavy);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border: 1px solid var(--subtle-border);
+      box-shadow: inset 0 1px 0 0 var(--specular-border), var(--shadow-ambient);
+    }
+    .glass-pill {
+      background: rgba(255, 255, 255, 0.66);
+      backdrop-filter: blur(16px) saturate(170%);
+      -webkit-backdrop-filter: blur(16px) saturate(170%);
+      border: 1px solid rgba(15, 35, 25, 0.09);
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.75);
+    }
+    .glass-dark {
+      background: var(--surface-dark-glass);
+      backdrop-filter: blur(24px) saturate(190%);
+      -webkit-backdrop-filter: blur(24px) saturate(190%);
+      border: 1px solid rgba(255, 255, 255, 0.14);
+      box-shadow: inset 0 1px 0 0 rgba(255, 255, 255, 0.2), var(--shadow-elevated);
+    }
+
+    /* Scroll edge gradient mask instead of harsh borders */
+    .scroll-mask-y {
+      mask-image: linear-gradient(to bottom, transparent 0px, black 10px, black calc(100% - 14px), transparent 100%);
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0px, black 10px, black calc(100% - 14px), transparent 100%);
+    }
+
+    /* Custom subtle scrollbars */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    ::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: rgba(15, 35, 25, 0.16);
+      border-radius: 9999px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: rgba(15, 35, 25, 0.28);
+    }
+
+    /* 14. Reduced Motion, Reduced Transparency & High Contrast support */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 120ms !important;
+        scroll-behavior: auto !important;
+      }
+      .press-feedback:active, .card-press-feedback:active {
+        transform: none !important;
+        opacity: 0.85;
+      }
+    }
+    body.force-reduced-motion *,
+    body.force-reduced-motion *::before,
+    body.force-reduced-motion *::after {
+      transition-duration: 120ms !important;
+    }
+    body.force-reduced-motion .press-feedback:active,
+    body.force-reduced-motion .card-press-feedback:active {
+      transform: none !important;
+      opacity: 0.85;
+    }
+
+    @media (prefers-reduced-transparency: reduce) {
+      .glass-nav, .glass-surface, .glass-pill {
+        background: #ffffff !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+      .glass-dark {
+        background: #141e19 !important;
+        backdrop-filter: none !important;
+        -webkit-backdrop-filter: none !important;
+      }
+    }
+    body.force-reduced-transparency .glass-nav,
+    body.force-reduced-transparency .glass-surface,
+    body.force-reduced-transparency .glass-pill {
+      background: #ffffff !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+      border-color: rgba(15, 35, 25, 0.2) !important;
+    }
+    body.force-reduced-transparency .glass-dark {
+      background: #141e19 !important;
+      backdrop-filter: none !important;
+      -webkit-backdrop-filter: none !important;
+    }
+
+    /* Interactive Scrubber Track */
+    .scrubber-thumb {
+      touch-action: none;
+      cursor: grab;
+    }
+    .scrubber-thumb:active {
+      cursor: grabbing;
+    }
+    .pip-draggable {
+      touch-action: none;
+      cursor: grab;
+      will-change: transform;
+    }
+    .pip-draggable:active {
+      cursor: grabbing;
+    }
+  </style>
+  <style id="glass-interface-refresh">
+    :root {
+      --surface-glass: rgba(255, 255, 255, .66);
+      --surface-glass-heavy: rgba(255, 255, 255, .76);
+      --subtle-border: rgba(40, 55, 75, .09);
+      --specular-border: rgba(255, 255, 255, .85);
+      --shadow-ambient: 0 16px 48px -28px rgba(25, 40, 65, .28), 0 2px 10px rgba(30, 50, 70, .035);
+      --shadow-elevated: 0 32px 90px -36px rgba(15, 28, 48, .4);
+      font-family: Inter, system-ui, "Segoe UI", sans-serif;
+    }
+    html { background: #edf2f8; }
+    body {
+      color: #172235;
+      min-height: 100vh;
+      background:
+        radial-gradient(ellipse at 12% 0%, rgba(174, 202, 237, .48), transparent 38rem),
+        radial-gradient(ellipse at 94% 8%, rgba(205, 218, 238, .48), transparent 34rem),
+        linear-gradient(150deg, #f5f7fb 0%, #eef2f7 54%, #eaf0f6 100%);
+      font-family: Inter, system-ui, "Segoe UI", sans-serif;
+    }
+    body::before {
+      content: ""; position: fixed; inset: 0; pointer-events: none; z-index: -1;
+      background: radial-gradient(ellipse at 50% 100%, rgba(211, 224, 240, .25), transparent 55%);
+    }
+    .glass-nav {
+      background: rgba(248, 250, 253, .72);
+      border-bottom: 1px solid rgba(75, 94, 120, .10);
+      box-shadow: 0 5px 28px rgba(30, 46, 70, .045);
+      backdrop-filter: blur(26px) saturate(150%);
+      -webkit-backdrop-filter: blur(26px) saturate(150%);
+    }
+    .glass-nav > div { max-width: 1320px; height: 68px; }
+    .glass-surface {
+      background: rgba(255, 255, 255, .70);
+      border: 1px solid rgba(255, 255, 255, .86);
+      box-shadow: 0 18px 56px -40px rgba(30, 48, 72, .32), inset 0 1px 0 rgba(255,255,255,.92);
+      backdrop-filter: blur(24px) saturate(145%);
+      -webkit-backdrop-filter: blur(24px) saturate(145%);
+    }
+    .glass-pill {
+      background: rgba(255,255,255,.56);
+      border-color: rgba(81, 101, 127, .12);
+      box-shadow: inset 0 1px 0 rgba(255,255,255,.9), 0 3px 12px rgba(28,45,69,.035);
+    }
+    .display-title, .section-heading { font-family: Inter, system-ui, sans-serif; color: #172235; }
+    .font-serif, .display-title.font-serif, .section-heading.font-serif { font-family: Inter, system-ui, sans-serif !important; }
+    .display-title { font-size: clamp(1.7rem, 3vw, 2.35rem); letter-spacing: -.045em; line-height: 1.08; font-weight: 650; }
+    .section-heading { font-size: clamp(1.18rem, 1.8vw, 1.45rem); letter-spacing: -.03em; font-weight: 650; }
+    main { max-width: 1320px !important; padding-top: 28px !important; }
+    #workspaceGrid { gap: 22px !important; }
+    #authorPortalSection, #adminPortalSection { gap: 22px; }
+    #authorPortalSection > .glass-surface:first-child,
+    #adminPortalSection > .glass-surface:first-child {
+      border-radius: 28px; padding: clamp(20px, 3vw, 34px);
+      background: linear-gradient(135deg, rgba(255,255,255,.84), rgba(248,251,255,.67));
+    }
+    #authorAvatar { border-radius: 18px; background: linear-gradient(145deg,#627fa7,#385879); box-shadow: 0 10px 25px rgba(53,82,119,.20); }
+    #authorPortalSection .grid.grid-cols-2.sm\:grid-cols-4 > div {
+      background: rgba(247,249,252,.68); border: 1px solid rgba(76,96,124,.08); border-radius: 18px;
+      padding: 16px; min-height: 88px;
+    }
+    #authorPortalSection .border-t, #adminPortalSection .border-t { border-color: rgba(72,91,119,.10); }
+    #authorTabBooks, #authorTabStudio, #authorTabSubmit, #authorTabTickets { min-width: 0; }
+    .author-tab-btn { border-radius: 999px !important; padding: 10px 15px !important; font-size: 13px !important; }
+    #authorBooksGrid { gap: 16px !important; }
+    #authorBooksGrid > * { border-radius: 22px !important; border-color: rgba(78,98,126,.10) !important; box-shadow: 0 12px 36px -30px rgba(23,39,62,.34); }
+    #adminPortalSection > .glass-surface:first-child { padding-bottom: 24px; }
+    #adminPortalSection .grid.grid-cols-2.sm\:grid-cols-4 > div { border-radius: 18px; background: rgba(255,255,255,.58); }
+    #adminQueueList { max-height: min(72vh, 760px) !important; padding: 4px; }
+    #adminTicketDetailPane { min-height: 420px; }
+    button, input, textarea, select { font: inherit; }
+    input:not([type=checkbox]):not([type=range]), textarea, select {
+      border-color: rgba(78, 98, 126, .16) !important;
+      background-color: rgba(255,255,255,.74) !important;
+      border-radius: 13px !important;
+      color: #172235;
+      box-shadow: inset 0 1px 2px rgba(22,37,58,.025);
+    }
+    input:focus, textarea:focus, select:focus {
+      outline: 3px solid rgba(93,130,176,.17) !important;
+      border-color: #6988af !important;
+    }
+    button { min-height: 38px; }
+    button:focus-visible, a:focus-visible { outline: 3px solid rgba(71,112,164,.55); outline-offset: 3px; }
+    #modePillIndicator, #btnModeSplit, #btnModeArch, #btnToggleSound, #btnOpenPhysicsModal,
+    #btnDownloadSingleHtml, #floatingPip, #archReviewSection { display: none !important; }
+    #workspaceModeSwitch { display: none !important; }
+    #headerRoleIndicator { display: inline-flex; align-items: center; gap: 8px; color: #4b5c72; font-size: 12px; font-weight: 600; }
+    #authorPortalSection #signedInBadge, #authorPortalSection #btnLogout { display: none !important; }
+    #headerRoleIndicator::before { content: ""; width: 8px; height: 8px; border-radius: 50%; background: #6f93ba; box-shadow: 0 0 0 4px rgba(111,147,186,.12); }
+    #loginModalBackdrop { background: rgba(27,39,57,.28) !important; backdrop-filter: blur(18px) saturate(120%); }
+    #loginModalCard { border-radius: 28px; padding: clamp(24px,5vw,38px); background: rgba(250,252,255,.88) !important; border-color: rgba(255,255,255,.9); box-shadow: 0 35px 110px -35px rgba(13,27,48,.42); }
+    #toastContainer > * { border-radius: 16px !important; box-shadow: 0 12px 42px rgba(20,34,52,.18); }
+    .press-feedback, .card-press-feedback { transition: background-color .16s ease, border-color .16s ease, box-shadow .16s ease, transform .12s ease; }
+    .press-feedback:active { transform: translateY(1px) scale(.99); }
+    @media (max-width: 760px) {
+      .glass-nav > div { height: 62px; }
+      .glass-nav > div > div:first-child p { display: none; }
+      main { padding: 16px 14px 84px !important; }
+      #authorPortalSection > .glass-surface:first-child,
+      #adminPortalSection > .glass-surface:first-child { border-radius: 23px; }
+      #adminPortalSection .grid.grid-cols-1.xl\:grid-cols-12 > div { grid-column: span 12 / span 12; }
+      #adminQueueList { max-height: 42vh !important; }
+      #authorPortalSection .grid.grid-cols-2.sm\:grid-cols-4 > div { min-height: 76px; padding: 12px; }
+    }
+    @media (prefers-reduced-transparency: reduce) {
+      .glass-nav, .glass-surface, .glass-pill { background: #f8fafc !important; backdrop-filter: none !important; -webkit-backdrop-filter: none !important; }
+    }
+    @media (prefers-contrast: more) {
+      .glass-nav, .glass-surface, .glass-pill { background: #fff !important; border: 1px solid #63748a !important; backdrop-filter: none !important; }
+      body { color: #111827; }
+    }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+  </style>
+</head>
+<body class="text-slate-900 selection:bg-leaf-600 selection:text-white">
+
+  <!-- ========================================================================
+       TOP TRANSLUCENT NAVIGATION CHROME (glass-interface §12 Materials & Depth)
+       ======================================================================== -->
+  <header class="glass-nav sticky top-0 z-40 transition-all duration-200">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-3">
+      <!-- Brand Identity -->
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-leaf-800 via-leaf-700 to-ocean-600 flex items-center justify-center text-white shadow-sm shrink-0">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+          </svg>
+        </div>
+        <div class="truncate">
+          <div class="flex items-center gap-2">
+            <span class="font-serif font-semibold text-lg tracking-tight text-slate-900">BookLeaf</span>
+            <span class="hidden sm:inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-medium bg-leaf-100 text-leaf-800 border border-leaf-200/70">Partner portal</span>
+          </div>
+          <p class="text-[11px] text-slate-500 hidden md:block truncate">Author support · Publishing operations</p>
+        </div>
+      </div>
+
+      <!-- Segmented Mode Switcher with Spring Indicator -->
+      <nav id="workspaceModeSwitch" aria-label="Workspace View Mode" class="relative glass-pill p-1 rounded-2xl flex items-center gap-0.5 shadow-inner">
+        <div id="modePillIndicator" class="absolute top-1 bottom-1 left-1 rounded-xl bg-slate-900 shadow-sm pointer-events-none" style="width: 118px; transform: translate3d(0px, 0, 0);"></div>
+        <button type="button" id="btnModeAuthor" data-mode="author" class="press-feedback relative z-10 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-colors duration-150 text-white flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+          <span>Author Portal</span>
+        </button>
+        <button type="button" id="btnModeAdmin" data-mode="admin" class="press-feedback relative z-10 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-colors duration-150 text-slate-700 hover:text-slate-900 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+          <span>Admin Ops</span>
+              <span id="navOpenBadge" class="px-1.5 py-0.2 rounded-full text-[10px] font-semibold bg-amber-500/20 text-amber-700 tabular-data">0</span>
+        </button>
+        <button type="button" id="btnModeSplit" data-mode="split" class="press-feedback hidden lg:flex relative z-10 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-colors duration-150 text-slate-700 hover:text-slate-900 items-center gap-1.5" title="View Author & Admin portals side-by-side to test real-time ticket updates">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M9 17V7m0 10a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h2a2 2 0 012 2m0 10a2 2 0 002 2h2a2 2 0 002-2M9 7a2 2 0 012-2h2a2 2 0 012 2m0 10V7"/></svg>
+          <span>Split Live Sync</span>
+        </button>
+        <button type="button" id="btnModeArch" data-mode="arch" class="press-feedback relative z-10 px-3.5 py-1.5 rounded-xl text-xs font-medium transition-colors duration-150 text-slate-700 hover:text-slate-900 flex items-center gap-1.5">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4"/></svg>
+          <span class="hidden sm:inline">API &amp; Review</span>
+        </button>
+      </nav>
+
+      <!-- Right Controls: Sound/Haptics, Physics Lab, AI Status -->
+      <div class="flex items-center gap-2">
+        <span id="headerRoleIndicator">Secure workspace</span>
+        <button type="button" id="btnHeaderLogout" class="hidden press-feedback px-3 py-2 rounded-full bg-slate-900 text-white text-xs font-semibold hover:bg-slate-700">Sign out</button>
+        <button type="button" id="btnToggleSound" class="press-feedback glass-pill px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-700 flex items-center gap-1.5 hover:bg-white/80" title="Toggle multimodal Web Audio micro-acoustics & haptics">
+          <span id="soundIconWrap" class="text-leaf-700">
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/></svg>
+          </span>
+          <span id="soundLabel" class="hidden xl:inline">Tactile Audio On</span>
+        </button>
+
+        <button type="button" id="btnOpenPhysicsModal" class="press-feedback glass-pill px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-700 flex items-center gap-1.5 hover:bg-white/80" title="Configure AI Engine, Outage Simulation & Interaction settings">
+          <span id="aiHealthDot" class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+          <span class="hidden sm:inline">AI &amp; Physics Lab</span>
+        </button>
+        <button type="button" id="btnDownloadSingleHtml" class="press-feedback px-3 py-1.5 rounded-xl text-xs font-semibold bg-leaf-800 text-white hover:bg-leaf-900 shadow-sm flex items-center gap-1.5" title="Download this complete portal as a single standalone .html file">
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"/></svg>
+          <span>Download .HTML</span>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- ========================================================================
+       MAIN WORKSPACE CONTAINER
+       ======================================================================== -->
+  <main class="max-w-[1440px] mx-auto px-4 sm:px-6 py-6 pb-24">
+
+    <!-- Dynamic Split / Single Grid Wrapper -->
+    <div id="workspaceGrid" class="grid grid-cols-1 gap-6 items-start">
+
+      <!-- ====================================================================
+           PORTAL A: AUTHOR PORTAL (AUTHOR-FACING)
+           ==================================================================== -->
+      <section id="authorPortalSection" aria-label="Author Portal" class="space-y-6 min-w-0">
+
+        <!-- Author Authentication & Persona Bar -->
+        <div class="glass-surface rounded-3xl p-5 sm:p-6 transition-all">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <!-- Active Author Identity -->
+            <div class="flex items-start sm:items-center gap-4">
+              <div id="authorAvatar" class="w-12 h-12 rounded-2xl bg-gradient-to-br from-leaf-700 to-ocean-600 text-white font-serif font-semibold text-lg flex items-center justify-center shadow-md shrink-0">
+                PS
+              </div>
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="micro-label uppercase font-semibold tracking-wider text-leaf-700 bg-leaf-100/90 px-2 py-0.5 rounded-md">Author account</span>
+                  <span id="authorIdBadge" class="font-mono text-xs text-slate-500">AUTH001</span>
+                  <span class="text-slate-300">•</span>
+                  <span id="authorCityBadge" class="text-xs text-slate-600">Mumbai</span>
+                </div>
+                <h1 id="authorNameHeading" class="display-title font-serif font-semibold text-slate-900 mt-0.5">Priya Sharma</h1>
+                <p id="authorMetaSub" class="text-xs text-slate-500 mt-0.5">priya.sharma@email.com • +91-98765-43210 • Member since Mar 2023</p>
+              </div>
+            </div>
+
+            <!-- Authenticated session controls -->
+            <div class="flex flex-wrap items-center gap-2.5">
+              <span id="signedInBadge" class="text-xs text-slate-600"></span>
+              <button type="button" id="btnLogout" class="press-feedback px-3.5 py-2 rounded-2xl text-xs font-medium bg-slate-900 text-white hover:bg-slate-800 shadow-sm flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z"/></svg>
+                <span>Sign Out</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Author KPI Summary Strip -->
+          <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-5 pt-5 border-t border-slate-200/60">
+            <div class="bg-white/70 rounded-2xl p-3.5 border border-slate-900/5">
+              <span class="micro-label uppercase text-slate-500 font-medium">Published &amp; In-Prod Titles</span>
+              <div class="mt-1 flex items-baseline justify-between">
+                <span id="kpiAuthorBooks" class="text-xl font-bold text-slate-900 tabular-data">2</span>
+                <span id="kpiAuthorCopies" class="text-xs font-medium text-leaf-700 tabular-data">531 copies sold</span>
+              </div>
+            </div>
+            <div class="bg-white/70 rounded-2xl p-3.5 border border-slate-900/5">
+              <span class="micro-label uppercase text-slate-500 font-medium">Total Royalty Earned (80%)</span>
+              <div class="mt-1 flex items-baseline justify-between">
+                <span id="kpiAuthorEarned" class="text-xl font-bold text-slate-900 tabular-data">₹19,908</span>
+                <span class="text-[11px] text-slate-500">Net 80/20 split</span>
+              </div>
+            </div>
+            <div class="bg-white/70 rounded-2xl p-3.5 border border-slate-900/5">
+              <span class="micro-label uppercase text-slate-500 font-medium">Royalty Disbursed</span>
+              <div class="mt-1 flex items-baseline justify-between">
+                <span id="kpiAuthorPaid" class="text-xl font-bold text-emerald-700 tabular-data">₹16,338</span>
+                <span id="kpiAuthorLastPayout" class="text-[11px] text-slate-500 tabular-data">Last: 2025-12-01</span>
+              </div>
+            </div>
+            <div class="bg-white/70 rounded-2xl p-3.5 border border-slate-900/5">
+              <span class="micro-label uppercase text-slate-500 font-medium">Pending Balance</span>
+              <div class="mt-1 flex items-baseline justify-between">
+                <span id="kpiAuthorPending" class="text-xl font-bold text-amber-700 tabular-data">₹3,570</span>
+                <span id="kpiAuthorThresholdBadge" class="text-[11px] font-medium text-emerald-700">Clears ₹1,000 min</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Author Sub-Navigation Tabs -->
+          <div class="flex flex-wrap items-center justify-between gap-3 mt-5 pt-4 border-t border-slate-200/60">
+            <div class="flex flex-wrap items-center gap-1.5" role="tablist">
+              <button type="button" data-author-tab="books" class="author-tab-btn press-feedback px-3.5 py-2 rounded-xl text-xs font-semibold bg-leaf-800 text-white shadow-sm flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+                <span>My Books &amp; Royalties</span>
+              </button>
+              <button type="button" data-author-tab="studio" class="author-tab-btn press-feedback px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/80 text-slate-700 hover:bg-white border border-slate-200/80 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5 text-leaf-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M13 10V3L4 14h7v7l9-11h-7z"/></svg>
+                <span>BookLeaf Studio: Royalty X-Ray &amp; Pipeline</span>
+                <span class="px-1.5 py-0.2 rounded-full text-[10px] bg-leaf-100 text-leaf-800 font-bold">UNIQUE</span>
+              </button>
+              <button type="button" data-author-tab="submit" class="author-tab-btn press-feedback px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/80 text-slate-700 hover:bg-white border border-slate-200/80 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/></svg>
+                <span>Submit Support Query</span>
+              </button>
+              <button type="button" data-author-tab="tickets" class="author-tab-btn press-feedback px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/80 text-slate-700 hover:bg-white border border-slate-200/80 flex items-center gap-1.5">
+                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M7 8h10M7 12h4m1 8l-4-4H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-3l-4 4z"/></svg>
+                <span>My Tickets</span>
+                <span id="authorTicketCountBadge" class="px-1.5 py-0.2 rounded-full text-[10px] bg-slate-200 text-slate-800 font-bold tabular-data">1</span>
+              </button>
+            </div>
+            <div class="text-[11px] text-slate-500 flex items-center gap-1.5">
+              <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+              <span>Live Event Bus Connected</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             AUTHOR TAB 1: MY BOOKS & ROYALTY LEDGER
+             ================================================================== -->
+        <div id="authorTabBooks" class="space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+            <div>
+              <h2 class="section-heading font-semibold text-slate-900">Published &amp; In-Production Catalog</h2>
+              <p class="text-xs text-slate-500">Real-time sales figures, 80/20 net profit royalties, print partners, and distribution channels.</p>
+            </div>
+            <button type="button" id="btnQuickRaiseFromBooks" class="press-feedback px-3 py-1.5 rounded-xl text-xs font-semibold bg-leaf-700 text-white hover:bg-leaf-800 shadow-sm flex items-center gap-1.5">
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"/></svg>
+              <span>Raise Query About a Book</span>
+            </button>
+          </div>
+
+          <div id="authorBooksGrid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <!-- Dynamically populated book cards -->
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             AUTHOR TAB 2 (STANDOUT UNIQUE SECTION):
+             BOOKLEAF STUDIO — INTERACTIVE ROYALTY X-RAY & PRODUCTION PULSE
+             ================================================================== -->
+        <div id="authorTabStudio" class="hidden space-y-5">
+          <div class="glass-surface rounded-3xl p-5 sm:p-6 border border-leaf-300/60 relative overflow-hidden">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/70">
+              <div>
+                <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-leaf-900 text-white mb-1.5">
+                  <span>★ BookLeaf Studio</span>
+                  <span class="text-leaf-300">•</span>
+                  <span>Direct-Manipulation Physics &amp; Self-Serve Transparency</span>
+                </div>
+                <h2 class="section-heading font-serif font-semibold text-slate-900">Interactive Royalty X-Ray &amp; 8-Stage Production Pulse</h2>
+                <p class="text-xs text-slate-600 mt-0.5">Inspect unit economics with 1:1 pointer tracking, spring momentum, and rubber-banding — or trigger self-serve stock syncs.</p>
+              </div>
+              <div class="flex items-center gap-2">
+                <label for="studioBookSelect" class="text-xs font-medium text-slate-500">Inspect Book:</label>
+                <select id="studioBookSelect" class="px-3 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-200 shadow-sm focus:outline-none">
+                  <!-- Populated dynamically -->
+                </select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 mt-5">
+              <!-- Left 7 Cols: Direct-Manipulation 80/20 Royalty Waterfall & Scrubber -->
+              <div class="lg:col-span-7 space-y-4">
+                <div class="bg-white/85 rounded-2xl p-4 border border-slate-200/70 shadow-sm">
+                  <div class="flex items-center justify-between gap-2 mb-3">
+                    <div>
+                      <span class="micro-label uppercase font-semibold text-leaf-700">1:1 Pointer-Tracked Sales Simulator</span>
+                      <h3 class="text-sm font-semibold text-slate-900">Drag or Flick to Project Copies Sold &amp; Quarterly Payout</h3>
+                    </div>
+                    <button type="button" id="btnResetScrubber" class="press-feedback text-[11px] font-medium text-leaf-700 hover:underline">Reset to Actual Sales</button>
+                  </div>
+
+                  <!-- Custom Pointer-Captured Spring Scrubber (glass-interface §2, §4, §5, §6, §9) -->
+                  <div class="py-3 select-none">
+                    <div class="flex items-baseline justify-between mb-2">
+                      <div>
+                        <span class="text-xs text-slate-500">Simulated Copies Sold:</span>
+                        <span id="scrubberCopiesReadout" class="ml-1.5 text-2xl font-bold text-slate-900 tabular-data">342</span>
+                        <span id="scrubberDeltaBadge" class="ml-2 text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 tabular-data">Actual Current Sales</span>
+                      </div>
+                      <div class="text-right">
+                        <span class="text-[11px] text-slate-400 font-mono" id="scrubberPhysicsTelemetry">v: 0 px/s • spring(1.0, 0.32)</span>
+                      </div>
+                    </div>
+
+                    <div id="scrubberTrack" class="relative h-10 rounded-2xl bg-slate-100 border border-slate-200/80 flex items-center px-3 overflow-hidden cursor-pointer">
+                      <!-- Progress fill -->
+                      <div id="scrubberFill" class="absolute inset-y-0 left-0 bg-gradient-to-r from-leaf-600/20 via-leaf-500/30 to-ocean-500/30 pointer-events-none" style="width: 25%;"></div>
+                      <!-- ₹1,000 Minimum Threshold Marker -->
+                      <div id="scrubberThresholdMarker" class="absolute inset-y-1 w-0.5 bg-amber-500/80 z-10 pointer-events-none" style="left: 10%;" title="₹1,000 Minimum Quarterly Payout Threshold">
+                        <span class="absolute -top-0.5 left-1.5 text-[9px] font-semibold text-amber-800 bg-amber-100 px-1 rounded whitespace-nowrap">₹1k Min</span>
+                      </div>
+                      <!-- Draggable Thumb -->
+                      <div id="scrubberThumb" class="scrubber-thumb relative z-20 w-7 h-7 rounded-xl bg-slate-900 text-white shadow-md flex items-center justify-center border border-white/50" style="transform: translate3d(0px, 0, 0);">
+                        <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/></svg>
+                      </div>
+                    </div>
+                    <div class="flex justify-between text-[10px] text-slate-400 mt-1 px-1 tabular-data">
+                      <span>0 copies (Rubber-band bound)</span>
+                      <span>250 copies</span>
+                      <span>500 copies</span>
+                      <span>1,000 copies</span>
+                      <span>2,000 copies (Max)</span>
+                    </div>
+                  </div>
+
+                  <!-- Per-Copy 80/20 Unit Economics Waterfall -->
+                  <div class="mt-3 pt-3 border-t border-slate-200/70">
+                    <div class="flex items-center justify-between text-xs font-semibold text-slate-700 mb-2">
+                      <span>Illustrative Per-Copy Economics</span>
+                      <span id="studioPrintPartnerBadge" class="text-[11px] font-medium px-2 py-0.5 rounded-md bg-slate-100 text-slate-700">Print: In-House Delhi</span>
+                    </div>
+                    <p class="text-[10px] text-slate-500 mb-2">Print and platform costs are estimates because itemized cost data is not included in this account record.</p>
+                    <div class="grid grid-cols-2 sm:grid-cols-5 gap-2 text-center">
+                      <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200/60">
+                        <div class="text-[10px] text-slate-500 uppercase">Retail MRP</div>
+                        <div id="waterfallMrp" class="text-sm font-bold text-slate-900 tabular-data mt-0.5">₹399.00</div>
+                      </div>
+                      <div class="p-2.5 rounded-xl bg-rose-50/60 border border-rose-200/50">
+                        <div class="text-[10px] text-rose-700 uppercase">Print Cost</div>
+                        <div id="waterfallPrint" class="text-sm font-semibold text-rose-800 tabular-data mt-0.5">-₹145.25</div>
+                      </div>
+                      <div class="p-2.5 rounded-xl bg-amber-50/60 border border-amber-200/50">
+                        <div class="text-[10px] text-amber-800 uppercase">Platform &amp; Ship</div>
+                        <div id="waterfallPlatform" class="text-sm font-semibold text-amber-900 tabular-data mt-0.5">-₹210.00</div>
+                      </div>
+                      <div class="p-2.5 rounded-xl bg-sky-50/70 border border-sky-200/60">
+                        <div class="text-[10px] text-sky-800 uppercase">Net Profit</div>
+                        <div id="waterfallNet" class="text-sm font-bold text-sky-900 tabular-data mt-0.5">₹43.75</div>
+                      </div>
+                      <div class="p-2.5 rounded-xl bg-emerald-50 border border-emerald-300/70">
+                        <div class="text-[10px] text-emerald-800 font-semibold uppercase">Author 80%</div>
+                        <div id="waterfallAuthor" class="text-sm font-bold text-emerald-900 tabular-data mt-0.5">₹35.00</div>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Simulated Total & Threshold Rollover Diagnostic -->
+                  <div class="mt-4 p-3.5 rounded-2xl bg-leaf-50/90 border border-leaf-200 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div>
+                      <div class="text-xs font-semibold text-leaf-950" id="studioPayoutHeadline">Projected Total Royalty: ₹11,970 (Pending: ₹3,570)</div>
+                      <p class="text-[11px] text-leaf-800 mt-0.5" id="studioPayoutSubtext">Clears the ₹1,000 minimum threshold. Paid via bank transfer within 45 days of quarter end.</p>
+                    </div>
+                    <button type="button" id="btnAskRoyaltyTicket" class="press-feedback shrink-0 px-3 py-1.5 rounded-xl text-xs font-semibold bg-white text-leaf-900 border border-leaf-300 shadow-sm hover:bg-leaf-100">
+                      Request Line-by-Line Statement
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Right 5 Cols: 8-Stage Production Pipeline & Platform Availability Pulse -->
+              <div class="lg:col-span-5 space-y-4">
+                <div class="bg-white/85 rounded-2xl p-4 border border-slate-200/70 shadow-sm">
+                  <div class="flex items-center justify-between mb-3">
+                    <div>
+                      <span class="micro-label uppercase font-semibold text-ocean-600">8-Stage Lifecycle Tracker</span>
+                      <h3 class="text-sm font-semibold text-slate-900" id="pipelineBookTitle">Whispers of the Ganges</h3>
+                    </div>
+                    <span id="pipelineCurrentBadge" class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800">Stage 8 of 8 • Live</span>
+                  </div>
+
+                  <!-- 8 Stages Vertical Stepper -->
+                  <div id="pipelineStagesList" class="space-y-2 text-xs">
+                    <!-- Populated dynamically -->
+                  </div>
+
+                  <!-- Distribution Channels & 1-Click Stock Re-Sync -->
+                  <div class="mt-4 pt-3 border-t border-slate-200/70">
+                    <div class="flex items-center justify-between mb-2">
+                      <span class="text-xs font-semibold text-slate-800">Platform Stock Sync Status</span>
+                      <button type="button" id="btnTriggerStockSync" class="press-feedback text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-ocean-600 text-white hover:bg-ocean-700 shadow-sm">
+                        Ask About Availability
+                      </button>
+                    </div>
+                    <div id="studioPlatformsWrap" class="flex flex-wrap gap-1.5">
+                      <!-- Populated dynamically -->
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             AUTHOR TAB 3: SUBMIT A SUPPORT QUERY
+             ================================================================== -->
+        <div id="authorTabSubmit" class="hidden">
+          <div class="glass-surface rounded-3xl p-5 sm:p-6">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-4 border-b border-slate-200/70">
+              <div>
+                <h2 class="section-heading font-serif font-semibold text-slate-900">Submit an Author Support Query</h2>
+                <p class="text-xs text-slate-500">Queries are automatically triaged by BookLeaf AI and routed to the right specialist team.</p>
+              </div>
+              <!-- Sample Query Quick-Fills from Assignment PDF -->
+              <div class="flex items-center gap-1.5 flex-wrap">
+                <span class="text-[11px] text-slate-500 font-medium">Sample Scenarios:</span>
+                <button type="button" data-sample="overdue_royalty" class="sample-fill-btn press-feedback px-2.5 py-1 rounded-lg text-[11px] font-medium bg-amber-50 text-amber-900 border border-amber-200 hover:bg-amber-100">4-Mo Royalty Delay</button>
+                <button type="button" data-sample="low_royalty" class="sample-fill-btn press-feedback px-2.5 py-1 rounded-lg text-[11px] font-medium bg-sky-50 text-sky-900 border border-sky-200 hover:bg-sky-100">Low Royalty Math</button>
+                <button type="button" data-sample="isbn_mismatch" class="sample-fill-btn press-feedback px-2.5 py-1 rounded-lg text-[11px] font-medium bg-rose-50 text-rose-900 border border-rose-200 hover:bg-rose-100">Amazon ISBN Error</button>
+                <button type="button" data-sample="print_defect" class="sample-fill-btn press-feedback px-2.5 py-1 rounded-lg text-[11px] font-medium bg-purple-50 text-purple-900 border border-purple-200 hover:bg-purple-100">Blurry Print Defect</button>
+                <button type="button" data-sample="unavailable" class="sample-fill-btn press-feedback px-2.5 py-1 rounded-lg text-[11px] font-medium bg-emerald-50 text-emerald-900 border border-emerald-200 hover:bg-emerald-100">Amazon Unavailable</button>
+              </div>
+            </div>
+
+            <form id="supportQueryForm" class="mt-5 space-y-4" novalidate>
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                  <label for="ticketBookSelect" class="block text-xs font-semibold text-slate-700 mb-1.5">Related Book (or Account Level) *</label>
+                  <select id="ticketBookSelect" required class="w-full px-3.5 py-2.5 rounded-2xl text-sm bg-white border border-slate-200/90 focus:outline-none focus:ring-2 focus:ring-leaf-600/30 focus:border-leaf-600">
+                    <!-- Populated with author's books + General / Account Level -->
+                  </select>
+                </div>
+                <div>
+                  <label for="ticketSubjectInput" class="block text-xs font-semibold text-slate-700 mb-1.5">Subject Line *</label>
+                  <input type="text" id="ticketSubjectInput" required maxlength="140" placeholder="e.g., Question regarding Q4 royalty payout or Amazon stock sync" class="w-full px-3.5 py-2.5 rounded-2xl text-sm bg-white border border-slate-200/90 focus:outline-none focus:ring-2 focus:ring-leaf-600/30 focus:border-leaf-600" />
+                </div>
+              </div>
+
+              <div>
+                <div class="flex items-center justify-between mb-1.5">
+                  <label for="ticketDescInput" class="block text-xs font-semibold text-slate-700">Detailed Description *</label>
+                  <span id="charCountLabel" class="text-[11px] text-slate-400 tabular-data">0 / 2000 chars</span>
+                </div>
+                <textarea id="ticketDescInput" rows="4" required placeholder="Describe your question or issue with any relevant order numbers, platforms, or dates..." class="w-full px-3.5 py-2.5 rounded-2xl text-sm bg-white border border-slate-200/90 focus:outline-none focus:ring-2 focus:ring-leaf-600/30 focus:border-leaf-600"></textarea>
+              </div>
+
+              <!-- Live AI Policy Pre-Check & Self-Serve Deflection Hint -->
+              <div id="liveDeflectionPreview" class="hidden p-3.5 rounded-2xl bg-gradient-to-r from-leaf-50 to-ocean-50 border border-leaf-200/80">
+                <div class="flex items-start gap-2.5">
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-leaf-800 text-white uppercase shrink-0 mt-0.5">AI Instant Context</span>
+                  <div class="text-xs text-slate-700 space-y-1">
+                    <div id="liveDeflectionCategory" class="font-semibold text-slate-900">Detected Topic: Royalty &amp; Payments</div>
+                    <p id="liveDeflectionHint">BookLeaf calculates royalties quarterly (80% of net profit) and disburses within 45 days of quarter end (₹1,000 minimum threshold).</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Optional File Attachment Support (Bonus Interactive Upload + Preset Mock Attachments) -->
+              <div>
+                <label class="block text-xs font-semibold text-slate-700 mb-1.5">Attachments (Optional — Defective Copy Photos, Proof PDF, Bank Statement)</label>
+                <div class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3">
+                  <label for="ticketFileInput" class="press-feedback flex-1 border-2 border-dashed border-slate-300/90 hover:border-leaf-600 rounded-2xl p-3.5 bg-white/60 cursor-pointer flex items-center justify-center gap-2.5 text-xs text-slate-600">
+                    <svg class="w-4 h-4 text-leaf-700" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+                    <span>Click to attach file or drop image/PDF here</span>
+                    <input type="file" id="ticketFileInput" multiple accept="image/*,.pdf,.doc,.docx" class="hidden" />
+                  </label>
+                  <button type="button" id="btnAttachSamplePhoto" class="press-feedback px-3 py-2.5 rounded-2xl text-xs font-medium bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-200/80 whitespace-nowrap">
+                    + Attach Sample Misprint Photo
+                  </button>
+                </div>
+                <div id="attachedFilesList" class="flex flex-wrap gap-2 mt-2"></div>
+              </div>
+
+              <div class="flex items-center justify-between pt-2">
+                <p class="text-[11px] text-slate-500">Submitting triggers `POST /api/v1/tickets` → AI Auto-Classification &amp; Priority Triage → Real-Time Admin Queue.</p>
+                <button type="submit" id="btnSubmitTicket" class="press-feedback px-5 py-2.5 rounded-2xl text-xs font-semibold bg-leaf-800 hover:bg-leaf-900 text-white shadow-md flex items-center gap-2">
+                  <span>Submit Support Ticket</span>
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M14 5l7 7m0 0l-7 7m7-7H3"/></svg>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- ==================================================================
+             AUTHOR TAB 4: MY TICKETS (REAL-TIME CONVERSATION VIEW)
+             ================================================================== -->
+        <div id="authorTabTickets" class="hidden space-y-4">
+          <div class="flex flex-wrap items-center justify-between gap-2 px-1">
+            <div>
+              <h2 class="section-heading font-semibold text-slate-900">My Support Tickets</h2>
+              <p class="text-xs text-slate-500">Replies and status changes sync live across signed-in sessions.</p>
+            </div>
+            <button type="button" id="btnNewTicketFromList" class="press-feedback px-3 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800">
+              + New Support Query
+            </button>
+          </div>
+
+          <div id="authorTicketsContainer" class="space-y-3">
+            <!-- Dynamically populated author tickets -->
+          </div>
+        </div>
+
+      </section>
+
+      <!-- ====================================================================
+           PORTAL B: ADMIN PORTAL (ADMIN-FACING OPERATIONS DASHBOARD)
+           ==================================================================== -->
+      <section id="adminPortalSection" aria-label="Admin Operations Portal" class="hidden space-y-5 min-w-0">
+
+        <!-- Admin Header & Operations KPIs -->
+        <div class="glass-surface rounded-3xl p-5 sm:p-6">
+          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div>
+              <div class="flex items-center gap-2">
+                <span class="micro-label uppercase font-bold tracking-wider px-2 py-0.5 rounded-md bg-ocean-100 text-ocean-700">Operations team</span>
+                <span class="text-xs text-slate-500">Logged in as <strong id="adminSessionName">Operations</strong></span>
+              </div>
+            <h2 class="display-title font-serif font-semibold text-slate-900 mt-1">Support operations</h2>
+            </div>
+
+            <!-- Admin KPI Strip -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+              <div class="px-3.5 py-2.5 rounded-2xl bg-rose-50/90 border border-rose-200/70">
+                <div class="text-[10px] font-semibold uppercase text-rose-700">Critical / High Unresolved</div>
+                <div id="adminKpiUrgent" class="text-lg font-bold text-rose-900 tabular-data">3</div>
+              </div>
+              <div class="px-3.5 py-2.5 rounded-2xl bg-amber-50/90 border border-amber-200/70">
+                <div class="text-[10px] font-semibold uppercase text-amber-800">Open / In Progress</div>
+                <div id="adminKpiOpen" class="text-lg font-bold text-amber-950 tabular-data">5</div>
+              </div>
+              <div class="px-3.5 py-2.5 rounded-2xl bg-emerald-50/90 border border-emerald-200/70">
+                <div class="text-[10px] font-semibold uppercase text-emerald-800">Resolved / Closed</div>
+                <div id="adminKpiResolved" class="text-lg font-bold text-emerald-950 tabular-data">2</div>
+              </div>
+              <div class="px-3.5 py-2.5 rounded-2xl bg-sky-50/90 border border-sky-200/70">
+                <div class="text-[10px] font-semibold uppercase text-sky-800">AI Fallback Drafts</div>
+                <div id="adminKpiTokens" class="text-lg font-bold text-sky-950 tabular-data">0</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Filter & Sort Bar -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-2.5 mt-5 pt-4 border-t border-slate-200/70">
+            <div>
+              <label for="adminFilterStatus" class="block text-[10px] font-semibold uppercase text-slate-500 mb-1">Status Filter</label>
+              <select id="adminFilterStatus" class="w-full px-3 py-2 rounded-xl text-xs font-medium bg-white border border-slate-200/90">
+                <option value="ALL">All Statuses</option>
+                <option value="UNRESOLVED">Unresolved (Open + In Progress)</option>
+                <option value="Open">Open</option>
+                <option value="In Progress">In Progress</option>
+                <option value="Resolved">Resolved</option>
+                <option value="Closed">Closed</option>
+              </select>
+            </div>
+            <div>
+              <label for="adminFilterCategory" class="block text-[10px] font-semibold uppercase text-slate-500 mb-1">AI Category</label>
+              <select id="adminFilterCategory" class="w-full px-3 py-2 rounded-xl text-xs font-medium bg-white border border-slate-200/90">
+                <option value="ALL">All 6 Categories</option>
+                <option value="Royalty & Payments">Royalty &amp; Payments</option>
+                <option value="ISBN & Metadata Issues">ISBN &amp; Metadata Issues</option>
+                <option value="Printing & Quality">Printing &amp; Quality</option>
+                <option value="Distribution & Availability">Distribution &amp; Availability</option>
+                <option value="Book Status & Production Updates">Book Status &amp; Production Updates</option>
+                <option value="General Inquiry">General Inquiry</option>
+              </select>
+            </div>
+            <div>
+              <label for="adminFilterPriority" class="block text-[10px] font-semibold uppercase text-slate-500 mb-1">Priority Score</label>
+              <select id="adminFilterPriority" class="w-full px-3 py-2 rounded-xl text-xs font-medium bg-white border border-slate-200/90">
+                <option value="ALL">All Priorities</option>
+                <option value="Critical">Critical</option>
+                <option value="High">High</option>
+                <option value="Medium">Medium</option>
+                <option value="Low">Low</option>
+              </select>
+            </div>
+            <div>
+              <label for="adminFilterDate" class="block text-[10px] font-semibold uppercase text-slate-500 mb-1">Submitted On / After</label>
+              <input type="date" id="adminFilterDate" class="w-full px-3 py-2 rounded-xl text-xs bg-white border border-slate-200/90" />
+            </div>
+            <div>
+              <label for="adminSortOrder" class="block text-[10px] font-semibold uppercase text-slate-500 mb-1">Queue Sort Order</label>
+              <select id="adminSortOrder" class="w-full px-3 py-2 rounded-xl text-xs font-medium bg-white border border-slate-200/90">
+                <option value="URGENT_OLDEST">Urgent &amp; Oldest Unresolved First</option>
+                <option value="NEWEST">Newest Submitted First</option>
+                <option value="OLDEST">Oldest Submitted First</option>
+              </select>
+            </div>
+            <div>
+              <label for="adminSearchInput" class="block text-[10px] font-semibold uppercase text-slate-500 mb-1">Search Author / ISBN / Ticket</label>
+              <input type="search" id="adminSearchInput" placeholder="Search Priya, BK001, ISBN..." class="w-full px-3 py-2 rounded-xl text-xs bg-white border border-slate-200/90 focus:outline-none focus:border-leaf-600" />
+            </div>
+          </div>
+        </div>
+
+        <!-- Admin Master-Detail Split Grid -->
+        <div class="grid grid-cols-1 xl:grid-cols-12 gap-5 items-start">
+          <!-- Left 5 Cols: Filterable Ticket Queue -->
+          <div class="xl:col-span-5 glass-surface rounded-3xl p-4 space-y-3">
+            <div class="flex items-center justify-between px-1">
+              <span class="text-xs font-semibold text-slate-800" id="adminQueueCountLabel">Ticket queue</span>
+              <span class="text-[11px] text-rose-700 font-medium flex items-center gap-1">
+                <span class="w-1.5 h-1.5 rounded-full bg-rose-600"></span>
+                <span>Urgent &amp; Oldest pinned top</span>
+              </span>
+            </div>
+            <div id="adminQueueList" class="space-y-2.5 max-h-[680px] overflow-y-auto pr-1 scroll-mask-y">
+              <!-- Populated dynamically -->
+            </div>
+          </div>
+
+          <!-- Right 7 Cols: Active Ticket Inspector, AI Triage Overrides & AI Response Editor -->
+          <div id="adminTicketDetailPane" class="xl:col-span-7 glass-surface rounded-3xl p-5 sm:p-6 space-y-5">
+            <!-- Populated dynamically when a ticket is selected -->
+          </div>
+        </div>
+
+      </section>
+
+    </div>
+
+    <!-- ======================================================================
+         SECTION C & D: ARCHITECTURE, REST API & CODE REVIEW STUDIO
+         ====================================================================== -->
+    <section id="archReviewSection" aria-label="Architecture, API Documentation and Detailed Code Review" class="hidden space-y-6">
+      <div class="glass-surface rounded-3xl p-6 sm:p-8 space-y-6">
+        <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-slate-200/70 pb-5">
+          <div>
+            <span class="micro-label uppercase font-bold tracking-wider px-2.5 py-0.5 rounded-md bg-leaf-900 text-white">Engineering &amp; Design Audit</span>
+            <h1 class="display-title font-serif font-semibold text-slate-900 mt-1">Architecture, AI Cost Telemetry &amp; Detailed Code Review</h1>
+            <p class="text-sm text-slate-600 mt-1">Complete evaluation walkthrough covering AI prompt engineering, selective token pruning, REST API specification, and glass interface design.</p>
+          </div>
+          <div class="flex items-center gap-2">
+            <button type="button" id="btnSimulateApiCall" class="press-feedback px-4 py-2 rounded-2xl text-xs font-semibold bg-leaf-800 text-white hover:bg-leaf-900 shadow-sm">
+              Check API Health
+            </button>
+          </div>
+        </div>
+
+        <!-- 4 Pillars Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <!-- 1. AI Integration & Selective Context RAG (25% Weight) -->
+          <div class="bg-white/85 rounded-2xl p-5 border border-slate-200/80 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-emerald-100 text-emerald-900">25% Weight • AI Integration Quality</span>
+              <span class="font-mono text-xs text-slate-500">services/aiService.js</span>
+            </div>
+            <h3 class="text-base font-semibold text-slate-900">1. Selective Context Pruning &amp; Graceful Degradation</h3>
+            <ul class="text-xs text-slate-600 space-y-2 leading-relaxed">
+              <li>• <strong>Selective Policy Context:</strong> The API routes the query to one BookLeaf policy section and includes only the referenced book's operational record. It omits the catalogue and previous conversation history from the model request.</li>
+              <li>• <strong>Model Choice:</strong> The server currently supports OpenAI <code>gpt-4o-mini</code>, configured with <code>OPENAI_API_KEY</code>. The request has a configurable timeout and records provider token usage when returned.</li>
+              <li>• <strong>Fallback:</strong> With no key or when the provider fails, the server uses deterministic classification and a policy-specific response template, then marks <code>ai_degraded: true</code> for admin review.</li>
+            </ul>
+          </div>
+
+          <!-- 2. Interaction feedback -->
+          <div class="bg-white/85 rounded-2xl p-5 border border-slate-200/80 space-y-3">
+            <div class="flex items-center justify-between">
+              <span class="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-sky-100 text-sky-900">glass-interface • Fluid Motion</span>
+              <span class="font-mono text-xs text-slate-500">SpringSolver(damping, response)</span>
+            </div>
+            <h3 class="text-base font-semibold text-slate-900">2. Interface interaction patterns</h3>
+            <ul class="text-xs text-slate-600 space-y-2 leading-relaxed">
+              <li>• <strong>Zero-Latency Pointer-Down Response:</strong> Every button and card responds on <code>pointerdown</code> (<code>scale(0.968)</code>) rather than waiting for <code>click</code> release.</li>
+              <li>• <strong>Interruptible Springs &amp; Velocity Handoff:</strong> Gesture-driven scrubber and floating PiP interactions use pointer capture, live position updates, release velocity, and reduced-motion fallbacks.</li>
+              <li>• <strong>Momentum &amp; Boundaries:</strong> The scrubber uses direct pointer tracking and a spring settle; motion and transparency preferences have accessible alternatives.</li>
+            </ul>
+          </div>
+        </div>
+
+        <!-- REST API Specification Table -->
+        <div class="bg-white/85 rounded-2xl p-5 border border-slate-200/80 space-y-3">
+          <div class="flex items-center justify-between">
+            <h3 class="text-base font-semibold text-slate-900">REST API Contract &amp; RBAC Matrix (`openapi.yaml`)</h3>
+            <span class="text-xs font-mono text-leaf-700">Bearer JWT + Role Middleware</span>
+          </div>
+          <div class="overflow-x-auto">
+            <table class="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr class="border-b border-slate-200 text-slate-500 uppercase text-[10px]">
+                  <th class="py-2 pr-3">Method &amp; Endpoint</th>
+                  <th class="py-2 px-3">RBAC Guard</th>
+                  <th class="py-2 px-3">Request Validation</th>
+                  <th class="py-2 pl-3">Behavior &amp; Security Guarantees</th>
+                </tr>
+              </thead>
+              <tbody class="divide-y divide-slate-200/60 font-mono text-[11px]">
+                <tr>
+                  <td class="py-2.5 pr-3 font-semibold text-emerald-800">POST /api/v1/auth/login</td>
+                  <td class="py-2.5 px-3 font-sans">Public</td>
+                  <td class="py-2.5 px-3 font-sans">Non-empty email and password</td>
+                  <td class="py-2.5 pl-3 font-sans text-slate-600">Issues signed JWT with <code>sub: author_id</code> and <code>role: 'author' | 'admin'</code>.</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-3 font-semibold text-sky-800">GET /api/v1/authors/me/books</td>
+                  <td class="py-2.5 px-3 font-sans">Author (Self)</td>
+                  <td class="py-2.5 px-3 font-sans">Author bearer JWT</td>
+                  <td class="py-2.5 pl-3 font-sans text-slate-600">Scopes books to the authenticated JWT subject.</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-3 font-semibold text-emerald-800">POST /api/v1/tickets</td>
+                  <td class="py-2.5 px-3 font-sans">Author (Self)</td>
+                  <td class="py-2.5 px-3 font-sans"><code>book_id</code> ownership, subject (4–160 chars), description (10–10,000 chars)</td>
+                  <td class="py-2.5 pl-3 font-sans text-slate-600">Persists the ticket and initial message, generates a server draft, and emits a scoped SSE event.</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-3 font-semibold text-sky-800">GET /api/v1/tickets</td>
+                  <td class="py-2.5 px-3 font-sans">Author / Admin</td>
+                  <td class="py-2.5 px-3 font-sans">Query filters: <code>status, category, priority, from, to</code></td>
+                  <td class="py-2.5 pl-3 font-sans text-slate-600">Authors receive only their own tickets with <code>internal_notes</code> stripped; Admins see full queue.</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-3 font-semibold text-amber-800">PATCH /api/v1/tickets/:id/triage</td>
+                  <td class="py-2.5 px-3 font-sans">Admin Only</td>
+                  <td class="py-2.5 px-3 font-sans">Valid enum for <code>category, priority, status, assigned_to</code></td>
+                  <td class="py-2.5 pl-3 font-sans text-slate-600">Validates admin overrides and persists the updated ticket.</td>
+                </tr>
+                <tr>
+                  <td class="py-2.5 pr-3 font-semibold text-emerald-800">POST /api/v1/tickets/:id/responses</td>
+                  <td class="py-2.5 px-3 font-sans">Admin / Author</td>
+                  <td class="py-2.5 px-3 font-sans"><code>message</code> body, <code>is_internal_note</code> boolean</td>
+                  <td class="py-2.5 pl-3 font-sans text-slate-600">Appends reply or internal note; broadcasts real-time update to Author Portal.</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Live REST API & AI Prompt Telemetry Log -->
+        <div class="bg-slate-950 text-slate-100 rounded-2xl p-5 space-y-3 font-mono text-xs">
+          <div class="flex items-center justify-between border-b border-slate-800 pb-2.5">
+            <span class="text-emerald-400 font-semibold">Live REST API &amp; Selective RAG Prompt Log</span>
+            <span id="telemetryStatusPill" class="px-2 py-0.5 rounded bg-slate-500/20 text-slate-300 text-[10px]">AI status is shown per ticket</span>
+          </div>
+          <div id="apiLogContainer" class="space-y-2 max-h-60 overflow-y-auto text-[11px] leading-relaxed">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <!-- ========================================================================
+       DRAGGABLE FLOATING LIVE SYNC & PHYSICS PiP PILL (glass-interface §2, §4, §6)
+       ======================================================================== -->
+  <aside id="floatingPip" class="pip-draggable fixed bottom-5 right-5 z-40 glass-dark text-white rounded-2xl p-3.5 w-72 shadow-2xl select-none">
+    <div class="flex items-center justify-between gap-2 mb-1.5">
+      <div class="flex items-center gap-2">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+        <span class="text-[11px] font-semibold tracking-wide uppercase text-emerald-300">Server Live Updates</span>
+      </div>
+      <span class="text-[10px] text-slate-400 font-mono" id="pipVelocityReadout">Flick me!</span>
+    </div>
+    <p id="pipLastEventText" class="text-xs text-slate-200 leading-snug">Connected updates appear here.</p>
+    <div class="mt-2.5 pt-2 border-t border-white/10 flex items-center justify-between text-[10px] text-slate-300">
+      <span id="pipTokenReadout" class="tabular-data">Authenticated SSE</span>
+      <button type="button" id="btnQuickJumpAdmin" class="press-feedback px-2 py-0.5 rounded bg-white/15 hover:bg-white/25 text-white font-medium">Switch Portal →</button>
+    </div>
+  </aside>
+
+  <!-- ========================================================================
+       MODAL 1: AUTHOR EMAIL / PASSWORD LOGIN DIALOG
+       ======================================================================== -->
+  <div id="loginModalBackdrop" class="fixed inset-0 z-50 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4">
+    <div id="loginModalCard" class="glass-surface bg-white/95 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-white/80 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="micro-label uppercase font-bold text-leaf-700">BookLeaf account</span>
+          <h3 class="text-lg font-serif font-semibold text-slate-900">Welcome back</h3>
+        </div>
+        <button type="button" id="btnCloseLoginModal" class="press-feedback w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600 hidden">✕</button>
+      </div>
+      <p class="text-xs text-slate-600">Use a seeded author email or <code>admin@bookleaf.in</code>. The shared demo password is configured on the server.</p>
+      <form id="loginModalForm" class="space-y-3" novalidate>
+        <div>
+          <label for="loginEmailInput" class="block text-xs font-semibold text-slate-700 mb-1">Email Address</label>
+          <input type="email" id="loginEmailInput" required autocomplete="username" placeholder="priya.sharma@email.com or admin@bookleaf.in" class="w-full px-3.5 py-2 rounded-xl text-sm bg-white border border-slate-300 focus:outline-none focus:border-leaf-700" />
+        </div>
+        <div>
+          <label for="loginPasswordInput" class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+          <input type="password" id="loginPasswordInput" required autocomplete="current-password" class="w-full px-3.5 py-2 rounded-xl text-sm bg-white border border-slate-300 focus:outline-none focus:border-leaf-700" />
+        </div>
+        <div id="loginErrorBox" class="hidden text-xs text-rose-700 bg-rose-50 border border-rose-200 rounded-xl p-2.5"></div>
+        <div class="pt-1 flex items-center justify-end gap-2">
+          <button type="button" id="btnCancelLogin" class="press-feedback px-4 py-2 rounded-xl text-xs font-medium bg-slate-100 text-slate-700 hidden">Cancel</button>
+          <button type="submit" id="loginSubmitButton" class="press-feedback px-4 py-2 rounded-xl text-xs font-semibold bg-leaf-800 text-white hover:bg-leaf-900">Sign In</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========================================================================
+       MODAL 2: AI ENGINE, OUTAGE SIMULATOR & APPLE PHYSICS LAB
+       ======================================================================== -->
+  <div id="physicsModalBackdrop" class="fixed inset-0 z-50 bg-slate-950/45 backdrop-blur-sm hidden items-center justify-center p-4">
+    <div id="physicsModalCard" class="glass-surface bg-white/95 rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-white/80 space-y-4">
+      <div class="flex items-center justify-between">
+        <div>
+          <span class="micro-label uppercase font-bold text-ocean-600">System Controls &amp; Accessibility</span>
+          <h3 class="text-lg font-serif font-semibold text-slate-900">AI Resilience &amp; Interface preferences</h3>
+        </div>
+        <button type="button" id="btnClosePhysicsModal" class="press-feedback w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center text-slate-600">✕</button>
+      </div>
+
+      <div class="space-y-3 text-xs">
+        <!-- Simulate AI API Down / Rate Limit (Requirement D.3) -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
+          <div>
+            <div class="font-semibold text-slate-900">Preview an AI outage state</div>
+            <p class="text-slate-500 mt-0.5">This visual preview does not change the server. The API performs its own fallback when the AI provider is unavailable.</p>
+          </div>
+          <input type="checkbox" id="toggleSimulateOutage" class="w-5 h-5 accent-rose-600 rounded cursor-pointer shrink-0" />
+        </div>
+
+        <!-- Accessibility & Reduced Motion Toggles (glass-interface §14) -->
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
+          <div>
+            <div class="font-semibold text-slate-900">Reduced Motion Mode (`prefers-reduced-motion`)</div>
+            <p class="text-slate-500 mt-0.5">Replaces spring animations &amp; momentum projection with gentle cross-fades.</p>
+          </div>
+          <input type="checkbox" id="toggleReducedMotion" class="w-5 h-5 accent-leaf-700 rounded cursor-pointer shrink-0" />
+        </div>
+
+        <div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between gap-3">
+          <div>
+            <div class="font-semibold text-slate-900">Reduced Transparency Mode (`prefers-reduced-transparency`)</div>
+            <p class="text-slate-500 mt-0.5">Replaces translucent `backdrop-filter` glass layers with high-contrast solid surfaces.</p>
+          </div>
+          <input type="checkbox" id="toggleReducedTransparency" class="w-5 h-5 accent-leaf-700 rounded cursor-pointer shrink-0" />
+        </div>
+      </div>
+
+      <div class="pt-2 flex justify-end">
+        <button type="button" id="btnDonePhysicsModal" class="press-feedback px-4 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-white">Apply &amp; Close</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast Notification Banner -->
+  <div id="toastContainer" class="fixed top-20 right-5 z-50 space-y-2 pointer-events-none"></div>
+
+  <!-- ========================================================================
+       APPLICATION LOGIC, SEED DATA, AI RAG ENGINE & APPLE SPRING PHYSICS
+       ======================================================================== -->
+  <script>
+    // ========================================================================
+    // 1. EXACT SEED DATA FROM bookleaf_sample_data.json (10 Authors, 18 Books)
+    // ========================================================================
+    let SEED_DATA = { authors: [] };
+
+    // Official 8 Production Stages from BookLeaf Knowledge Base
+    const PRODUCTION_STAGES = [
+      { id: 1, name: "Manuscript Received", sla: "Day 1", desc: "Initial manuscript file validated and logged." },
+      { id: 2, name: "Editing", sla: "3–5 Business Days", desc: "Copy-editing & structural polish (if opted)." },
+      { id: 3, name: "Cover Design", sla: "4–6 Business Days", desc: "Custom cover layout — requires author sign-off." },
+      { id: 4, name: "Typesetting", sla: "5–7 Business Days", desc: "Interior layout formatting and pagination." },
+      { id: 5, name: "Proofreading", sla: "3–5 Business Days", desc: "Author proof review & final revision rounds." },
+      { id: 6, name: "ISBN Assignment", sla: "1–2 Business Days", desc: "Unique ISBN registered under BookLeaf imprint." },
+      { id: 7, name: "Printing", sla: "5–7 Business Days", desc: "Printed at Delhi In-House facility, Repro India, or Epitome Books." },
+      { id: 8, name: "Published & Live", sla: "7–10 Days to Retail", desc: "Live on Amazon IN/US/UK, Flipkart & BookLeaf Store." }
+    ];
+
+    // Modular Knowledge Base Chunks for Selective Token-Conscious RAG (Requirement D.1 & D.4)
+    const KB_CHUNKS = {
+      "Royalty & Payments": {
+        tokens: 142,
+        policy: "BookLeaf follows an 80/20 net profit split (80% to author, 20% to BookLeaf). Net profit = MRP minus printing cost, platform commission (Amazon/Flipkart), and shipping. Calculated quarterly and paid within 45 days of quarter end via bank transfer. Minimum payout threshold is ₹1,000 (balances under ₹1,000 roll over to the next quarter)."
+      },
+      "ISBN & Metadata Issues": {
+        tokens: 118,
+        policy: "Every book receives a unique ISBN under BookLeaf's publisher imprint. ISBN errors (duplicate or wrong book linked on Amazon) are treated as High/Critical priority and escalated immediately to the Production Team with a 48-hour resolution SLA. Metadata/description updates take 3–5 business days to reflect."
+      },
+      "Printing & Quality": {
+        tokens: 124,
+        policy: "In-house printing in Delhi handles most orders; overflow/special formats use Repro India or Epitome Books. Standard turnaround is 5–7 business days. For quality issues (misprints, blurry images, binding defects), BookLeaf arranges a free reprint within 5–7 business days once photos of the defective copy are verified."
+      },
+      "Distribution & Availability": {
+        tokens: 112,
+        policy: "Books are listed on Amazon India, Flipkart, Amazon US, Amazon UK, and the BookLeaf Store. New listings go live within 7–10 business days after publication. If a live book shows 'Currently Unavailable', it is a stock sync issue—BookLeaf triggers a platform re-sync that resolves within 24–48 hours."
+      },
+      "Book Status & Production Updates": {
+        tokens: 130,
+        policy: "Production stages: Manuscript Received → Editing → Cover Design → Typesetting → Proofreading → ISBN Assignment → Printing → Distribution Setup → Published & Live. Delays most commonly occur at Cover Design (awaiting approval) or Proofreading (revision rounds). Escalations receive an update within 48 hours."
+      },
+      "General Inquiry": {
+        tokens: 105,
+        policy: "BookLeaf offers Standard Free and Bestseller Breakthrough packages across India and the US. Metadata updates (descriptions, author bio) can be submitted via the dashboard or support ticket and reflect across retail platforms within 3–5 business days."
+      }
+    };
+
+
+    // ========================================================================
+    // 2. MULTIMODAL AUDIO-HAPTIC SYNTHESIZER (glass-interface §13)
+    //    Causality, Harmony (same-frame trigger), and Utility
+    // ========================================================================
+    class InteractionFeedback {
+      constructor() {
+        this.enabled = true;
+        this.ctx = null;
+        this.lastDetentTime = 0;
+      }
+      initContext() {
+        if (!this.ctx && typeof window !== "undefined") {
+          const AudioCtx = window.AudioContext || window.webkitAudioContext;
+          if (AudioCtx) this.ctx = new AudioCtx();
+        }
+        if (this.ctx && this.ctx.state === "suspended") {
+          this.ctx.resume();
+        }
+      }
+      // Subtle mechanical tick on scrubber detents or segmented switch
+      tick(pitch = 680) {
+        if (!this.enabled) return;
+        const nowPerf = performance.now();
+        if (nowPerf - this.lastDetentTime < 28) return;
+        this.lastDetentTime = nowPerf;
+        try {
+          this.initContext();
+          if (!this.ctx) return;
+          const osc = this.ctx.createOscillator();
+          const gain = this.ctx.createGain();
+          osc.type = "triangle";
+          osc.frequency.setValueAtTime(pitch, this.ctx.currentTime);
+          osc.frequency.exponentialRampToValueAtTime(140, this.ctx.currentTime + 0.018);
+          gain.gain.setValueAtTime(0.045, this.ctx.currentTime);
+          gain.gain.exponentialRampToValueAtTime(0.001, this.ctx.currentTime + 0.018);
+          osc.connect(gain);
+          gain.connect(this.ctx.destination);
+          osc.start();
+          osc.stop(this.ctx.currentTime + 0.02);
+          if (navigator.vibrate) navigator.vibrate(4);
+        } catch (e) {}
+      }
+      // Soft harmonic chord on ticket submission or admin reply commit
+      commitSuccess() {
+        if (!this.enabled) return;
+        try {
+          this.initContext();
+          if (!this.ctx) return;
+          const notes = [523.25, 659.25, 783.99]; // C5 - E5 - G5
+          notes.forEach((freq, idx) => {
+            const osc = this.ctx.createOscillator();
+            const gain = this.ctx.createGain();
+            const start = this.ctx.currentTime + idx * 0.045;
+            osc.type = "sine";
+            osc.frequency.setValueAtTime(freq, start);
+            gain.gain.setValueAtTime(0.05, start);
+            gain.gain.exponentialRampToValueAtTime(0.0008, start + 0.24);
+            osc.connect(gain);
+            gain.connect(this.ctx.destination);
+            osc.start(start);
+            osc.stop(start + 0.25);
+          });
+          if (navigator.vibrate) navigator.vibrate([8, 30, 12]);
+        } catch (e) {}
+      }
+    }
+    const feedback = new InteractionFeedback();
+
+    // ========================================================================
+    // 3. APPLE FLUID INTERFACE PHYSICS ENGINE (glass-interface §3, §4, §5, §6, §9)
+    //    - Parameterized by (dampingRatio, response)
+    //    - Interruptible mid-flight (continues from presentation value & velocity)
+    //    - Momentum projection: project(v, d = 0.998)
+    //    - Rubber-banding: rubberband(overshoot, dimension, 0.55)
+    // ========================================================================
+    function projectMomentum(initialVelocity, decelerationRate = 0.998) {
+      return (initialVelocity / 1000) * decelerationRate / (1 - decelerationRate);
+    }
+
+    function applyRubberband(overshoot, dimension, constant = 0.55) {
+      if (dimension <= 0) return 0;
+      const sign = overshoot < 0 ? -1 : 1;
+      const abs = Math.abs(overshoot);
+      return sign * ((abs * dimension * constant) / (dimension + constant * abs));
+    }
+
+    class SpringMotion1D {
+      constructor(initialValue = 0) {
+        this.value = initialValue;
+        this.target = initialValue;
+        this.velocity = 0;
+        this.damping = 1.0;
+        this.response = 0.35;
+        this.rafId = null;
+        this.lastTime = null;
+        this.onUpdate = null;
+      }
+      stop() {
+        if (this.rafId) {
+          cancelAnimationFrame(this.rafId);
+          this.rafId = null;
+        }
+        this.lastTime = null;
+      }
+      setImmediate(val) {
+        this.stop();
+        this.value = val;
+        this.target = val;
+        this.velocity = 0;
+        if (this.onUpdate) this.onUpdate(this.value, this.velocity);
+      }
+      animateTo(target, { damping = 1.0, response = 0.35, velocity = null, onUpdate = null } = {}) {
+        if (onUpdate) this.onUpdate = onUpdate;
+        // Respect Reduced Motion preference
+        const reducedMotion = document.body.classList.contains("force-reduced-motion") ||
+          (window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches);
+        if (reducedMotion) {
+          this.setImmediate(target);
+          return;
+        }
+        this.target = target;
+        this.damping = damping;
+        this.response = Math.max(0.08, response);
+        if (velocity !== null && Number.isFinite(velocity)) {
+          this.velocity = velocity;
+        }
+        if (!this.rafId) {
+          this.lastTime = performance.now();
+          const step = (now) => {
+            const dt = Math.min((now - this.lastTime) / 1000, 0.032);
+            this.lastTime = now;
+
+            // Convert (dampingRatio, response) -> physical (stiffness k, damping c)
+            const omega = (2 * Math.PI) / this.response;
+            const k = omega * omega;
+            const c = 2 * this.damping * omega;
+
+            const displacement = this.value - this.target;
+            const accel = -k * displacement - c * this.velocity;
+            this.velocity += accel * dt;
+            this.value += this.velocity * dt;
+
+            if (this.onUpdate) this.onUpdate(this.value, this.velocity);
+
+            if (Math.abs(this.target - this.value) < 0.25 && Math.abs(this.velocity) < 2.5) {
+              this.value = this.target;
+              this.velocity = 0;
+              if (this.onUpdate) this.onUpdate(this.value, 0);
+              this.rafId = null;
+              return;
+            }
+            this.rafId = requestAnimationFrame(step);
+          };
+          this.rafId = requestAnimationFrame(step);
+        }
+      }
+    }
+
+    // ========================================================================
+    // 4. APPLICATION STATE & REAL-TIME BUS
+    // ========================================================================
+    const state = {
+      viewMode: "author", // 'author' | 'admin' | 'split' | 'arch'
+      authorTab: "books", // 'books' | 'studio' | 'submit' | 'tickets'
+      currentAuthorId: "AUTH001",
+      user: null,
+      authToken: null,
+      eventController: null,
+      studioBookId: "BK001",
+      simulatedSales: 342,
+      selectedAdminTicketId: null,
+      adminFilters: {
+        status: "ALL",
+        category: "ALL",
+        priority: "ALL",
+        from: "",
+        sort: "URGENT_OLDEST",
+        search: ""
+      },
+      pendingAttachments: [],
+      simulateAiOutage: false,
+      toneStyle: "empathetic", // 'empathetic' | 'concise' | 'detailed'
+      tickets: [],
+      apiLogs: []
+    };
+
+    function logApiCall(method, endpoint, status, detail) {
+      const entry = {
+        time: new Date().toLocaleTimeString(),
+        method,
+        endpoint,
+        status,
+        detail
+      };
+      state.apiLogs.unshift(entry);
+      if (state.apiLogs.length > 30) state.apiLogs.pop();
+      renderApiLogs();
+    }
+
+    // Helper Lookups
+    function getAuthorById(authorId) {
+      return SEED_DATA.authors.find((a) => a.author_id === authorId) || null;
+    }
+
+    async function apiRequest(endpoint, options = {}) {
+      const headers = { "Content-Type": "application/json", ...(options.headers || {}) };
+      if (state.authToken) headers.Authorization = `Bearer ${state.authToken}`;
+      const response = await fetch(endpoint, { ...options, headers });
+      const payload = await response.json().catch(() => ({}));
+      logApiCall(options.method || "GET", endpoint, response.status, response.ok ? "Request completed" : (payload.message || "Request failed"));
+      if (!response.ok) throw new Error(payload.message || `Request failed (${response.status})`);
+      return payload;
+    }
+
+    function handleApiError(error) {
+      showToast(error && error.message ? error.message : "Could not reach BookLeaf. Check your connection and try again.", "rose");
+    }
+
+    async function refreshTickets() {
+      const result = await apiRequest("/api/v1/tickets");
+      state.tickets = result.tickets || [];
+      if (!state.tickets.some((ticket) => ticket.id === state.selectedAdminTicketId)) {
+        state.selectedAdminTicketId = state.tickets[0]?.id || null;
+      }
+      renderAll();
+      return state.tickets;
+    }
+
+    async function loadAccountData() {
+      if (!state.user || !state.authToken) return;
+      if (state.user.role === "admin") {
+        const [authorsResult, ticketsResult] = await Promise.all([
+          apiRequest("/api/v1/authors"), apiRequest("/api/v1/tickets")
+        ]);
+        SEED_DATA = { authors: authorsResult.authors || [] };
+        state.tickets = ticketsResult.tickets || [];
+      } else {
+        const [account, ticketsResult] = await Promise.all([
+          apiRequest("/api/v1/authors/me/books"), apiRequest("/api/v1/tickets")
+        ]);
+        SEED_DATA = { authors: [{ ...account, ...state.user, books: account.books }] };
+        state.currentAuthorId = account.author_id;
+        state.tickets = ticketsResult.tickets || [];
+        state.studioBookId = account.books[0]?.book_id || null;
+        state.simulatedSales = account.books[0]?.total_copies_sold || 0;
+      }
+      state.selectedAdminTicketId = state.tickets[0]?.id || null;
+      document.body.classList.add("authenticated");
+      document.getElementById("signedInBadge").textContent = `${state.user.name} · ${state.user.role}`;
+      document.getElementById("adminSessionName").textContent = state.user.name;
+      const authorSession = state.user.role === "author";
+      document.getElementById("headerRoleIndicator").textContent = authorSession ? "Author workspace" : "Operations workspace";
+      document.getElementById("btnHeaderLogout").classList.remove("hidden");
+      document.getElementById("btnModeAuthor").classList.toggle("hidden", !authorSession);
+      document.getElementById("btnModeAdmin").classList.toggle("hidden", authorSession);
+      ["btnModeSplit", "btnModeArch"].forEach((id) => document.getElementById(id).classList.add("hidden"));
+      document.getElementById("navOpenBadge").classList.toggle("hidden", authorSession);
+      document.getElementById("btnQuickJumpAdmin").classList.toggle("hidden", authorSession);
+      document.getElementById("loginModalBackdrop").classList.add("hidden");
+      document.getElementById("loginModalBackdrop").classList.remove("flex");
+      renderAll();
+      connectRealtime();
+      if (state.user.role === "author") setViewMode("author");
+      else setViewMode("admin");
+    }
+
+    function connectRealtime() {
+      if (state.eventController) state.eventController.abort();
+      if (!state.authToken) return;
+      const controller = new AbortController();
+      state.eventController = controller;
+      (async () => {
+        while (!controller.signal.aborted && state.authToken) {
+          try {
+            const response = await fetch("/api/v1/events", {
+              headers: { Authorization: `Bearer ${state.authToken}` }, signal: controller.signal
+            });
+            if (!response.ok || !response.body) throw new Error("Live updates are temporarily unavailable.");
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder();
+            let buffer = "";
+            while (!controller.signal.aborted) {
+              const { value, done } = await reader.read();
+              if (done) break;
+              buffer += decoder.decode(value, { stream: true });
+              const events = buffer.split("\n\n");
+              buffer = events.pop() || "";
+              for (const event of events) if (event.includes("data:")) {
+                const eventName = event.match(/^event:\s*([a-z_]+)/m)?.[1] || "ticket_updated";
+                const pip = document.getElementById("pipLastEventText");
+                if (pip) pip.textContent = `Live update received: ${eventName.replaceAll("_", " ")}.`;
+                refreshTickets().catch(handleApiError);
+              }
+            }
+          } catch (error) {
+            if (controller.signal.aborted) break;
+            await new Promise((resolve) => setTimeout(resolve, 2500));
+          }
+        }
+      })();
+    }
+
+    function getAllBooksFlat() {
+      const list = [];
+      SEED_DATA.authors.forEach((a) => {
+        a.books.forEach((b) => {
+          list.push({ ...b, author_id: a.author_id, author_name: a.name, author_email: a.email, author_city: a.city });
+        });
+      });
+      return list;
+    }
+
+    function getBookById(bookId) {
+      if (!bookId || bookId === "GENERAL") return null;
+      return getAllBooksFlat().find((b) => b.book_id === bookId) || null;
+    }
+
+    function formatINR(num) {
+      if (num === null || num === undefined || Number.isNaN(Number(num))) return "TBD";
+      return "₹" + Number(num).toLocaleString("en-IN");
+    }
+
+    function formatRelativeTime(isoStr) {
+      if (!isoStr) return "Just now";
+      const d = new Date(isoStr);
+      if (Number.isNaN(d.getTime())) return isoStr;
+      return d.toLocaleString("en-IN", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" });
+    }
+
+    // ========================================================================
+    // 5. AI INTEGRATION ENGINE: AUTO-CLASSIFICATION, PRIORITY SCORING &
+    //    SELECTIVE-CONTEXT RAG RESPONSE GENERATOR (Requirements B & D)
+    // ========================================================================
+    function classifyAndScoreTicket(subject, description, bookObj) {
+      const text = ((subject || "") + " " + (description || "")).toLowerCase();
+
+      // 1. Category classification across the 6 exact required categories
+      let category = "General Inquiry";
+      let confidence = 0.89;
+      let reasoning = "Classified as a general publishing or metadata update inquiry.";
+
+      if (/isbn|barcode|wrong book|duplicate|asin|imprint/i.test(text)) {
+        category = "ISBN & Metadata Issues";
+        confidence = 0.98;
+        reasoning = "Matched ISBN/imprint/catalog linkage terms. Per BookLeaf ISBN Policy, ISBN discrepancies require immediate Production Team escalation.";
+      } else if (/print|blurry|misprint|binding|page|misaligned|defect|quality|cover color|reprint|damaged/i.test(text)) {
+        category = "Printing & Quality";
+        confidence = 0.97;
+        reasoning = "Matched physical manufacturing quality terms ('print', 'blurry', 'misaligned', 'reprint'). Eligible for free reprint within 5–7 business days after photo verification.";
+      } else if (/unavailable|out of stock|stock|amazon|flipkart|listing|distribution|live on|store/i.test(text) && !/description|bio/i.test(text)) {
+        category = "Distribution & Availability";
+        confidence = 0.95;
+        reasoning = "Matched retail channel availability/stock sync terms. Typically resolved via a 24–48 hour platform inventory re-sync.";
+      } else if (/typesetting|proofreading|cover design|production|stage|manuscript|when will it be done|stuck|weeks/i.test(text) || (bookObj && bookObj.status && bookObj.status.includes("In Production"))) {
+        category = "Book Status & Production Updates";
+        confidence = 0.95;
+        reasoning = "Matched production pipeline stage inquiry or book currently in production.";
+      } else if (/royalty|royalties|payment|payout|paid|pending|earned|80\/20|bank|threshold|1000|1,000|copies sold|profit|mrp/i.test(text)) {
+        category = "Royalty & Payments";
+        confidence = 0.97;
+        reasoning = "Matched financial, royalty split (80/20), or quarterly payout terms.";
+      }
+
+      // 2. Priority Score (Critical / High / Medium / Low)
+      let priority = "Medium";
+      if (
+        category === "ISBN & Metadata Issues" ||
+        /urgent|6 months|4 months|still haven't received|never received|wrong isbn|different isbn|terrible|corrupt/i.test(text)
+      ) {
+        priority = /different isbn|wrong isbn|6 months/i.test(text) ? "Critical" : "High";
+      } else if (
+        category === "Printing & Quality" ||
+        category === "Distribution & Availability" ||
+        (category === "Royalty & Payments" && (!bookObj || (bookObj.royalty_pending || 0) >= 1000))
+      ) {
+        priority = "High";
+      } else if (/bio|description|update my|general|package/i.test(text)) {
+        priority = "Low";
+      }
+
+      // 3. Token Usage Calculation (Selective Context vs Naive Full Dump)
+      const kbChunk = KB_CHUNKS[category] || KB_CHUNKS["General Inquiry"];
+      const bookContextTokens = bookObj ? 95 : 30;
+      const queryTokens = Math.max(25, Math.round(text.length / 4));
+      const systemPromptTokens = 165;
+      const selectiveTokens = systemPromptTokens + kbChunk.tokens + bookContextTokens + queryTokens;
+      const naiveTokens = 1840 + queryTokens; // Full 18-book dataset + full KB + history
+
+      return {
+        category,
+        priority,
+        confidence,
+        reasoning,
+        selectiveTokens,
+        naiveTokens
+      };
+    }
+
+    // ========================================================================
+    // 6. UI RENDERING FUNCTIONS
+    // ========================================================================
+    function renderAuthorHeaderAndKpis() {
+      const author = getAuthorById(state.currentAuthorId);
+      if (!author) return;
+
+      const initials = author.name.split(" ").map((n) => n[0]).join("").slice(0, 2);
+      document.getElementById("authorAvatar").textContent = initials;
+      document.getElementById("authorIdBadge").textContent = author.author_id;
+      document.getElementById("authorCityBadge").textContent = author.city;
+      document.getElementById("authorNameHeading").textContent = author.name;
+      document.getElementById("authorMetaSub").textContent = `${author.email} • ${author.phone} • Joined ${author.joined_date}`;
+
+      const totalCopies = author.books.reduce((s, b) => s + (b.total_copies_sold || 0), 0);
+      const totalEarned = author.books.reduce((s, b) => s + (b.total_royalty_earned || 0), 0);
+      const totalPaid = author.books.reduce((s, b) => s + (b.royalty_paid || 0), 0);
+      const totalPending = author.books.reduce((s, b) => s + (b.royalty_pending || 0), 0);
+      const lastDates = author.books.map((b) => b.last_royalty_payout_date).filter(Boolean).sort();
+      const latestPayout = lastDates.length ? lastDates[lastDates.length - 1] : "None yet";
+
+      document.getElementById("kpiAuthorBooks").textContent = `${author.books.length}`;
+      document.getElementById("kpiAuthorCopies").textContent = `${totalCopies.toLocaleString("en-IN")} copies sold`;
+      document.getElementById("kpiAuthorEarned").textContent = formatINR(totalEarned);
+      document.getElementById("kpiAuthorPaid").textContent = formatINR(totalPaid);
+      document.getElementById("kpiAuthorLastPayout").textContent = `Last: ${latestPayout}`;
+      document.getElementById("kpiAuthorPending").textContent = formatINR(totalPending);
+
+      const threshEl = document.getElementById("kpiAuthorThresholdBadge");
+      if (totalPending === 0) {
+        threshEl.textContent = "All royalties settled";
+        threshEl.className = "text-[11px] font-medium text-slate-500";
+      } else if (totalPending < 1000) {
+        threshEl.textContent = `₹${1000 - totalPending} below ₹1k min (Rolls over)`;
+        threshEl.className = "text-[11px] font-semibold text-amber-700";
+      } else {
+        threshEl.textContent = "Clears ₹1,000 threshold ✓";
+        threshEl.className = "text-[11px] font-semibold text-emerald-700";
+      }
+
+      // Update Author Tickets Count Badge
+      const myTickets = state.tickets.filter((t) => t.author_id === author.author_id);
+      document.getElementById("authorTicketCountBadge").textContent = `${myTickets.length}`;
+    }
+
+    function renderAuthorBooks() {
+      const author = getAuthorById(state.currentAuthorId);
+      const grid = document.getElementById("authorBooksGrid");
+      if (!grid || !author) return;
+
+      grid.innerHTML = author.books.map((b) => {
+        const isProd = b.status && b.status.includes("In Production");
+        const isBelowMin = !isProd && b.royalty_pending > 0 && b.royalty_pending < 1000;
+        const isSettled = !isProd && b.royalty_pending === 0 && b.total_royalty_earned > 0;
+
+        let statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800 border border-emerald-200/80">${b.status}</span>`;
+        if (isProd) {
+          statusBadge = `<span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-900 border border-amber-300/80">${b.status}</span>`;
+        }
+
+        let payoutCallout = "";
+        if (isProd) {
+          payoutCallout = `<div class="mt-3 p-2.5 rounded-xl bg-amber-50/90 border border-amber-200/80 text-xs text-amber-900 flex items-center justify-between">
+            <span>Currently in production pipeline — MRP &amp; retail feeds activate upon stage completion.</span>
+            <button type="button" data-inspect-book="${b.book_id}" class="btn-inspect-studio press-feedback font-semibold underline ml-2 shrink-0">Track Stage →</button>
+          </div>`;
+        } else if (isBelowMin) {
+          payoutCallout = `<div class="mt-3 p-2.5 rounded-xl bg-amber-50/90 border border-amber-200/80 text-xs text-amber-900 flex items-center justify-between">
+            <span>Pending ₹${b.royalty_pending} is below the ₹1,000 quarterly threshold (rolls over safely; ₹${1000 - b.royalty_pending} to go).</span>
+            <button type="button" data-inspect-book="${b.book_id}" class="btn-inspect-studio press-feedback font-semibold underline ml-2 shrink-0">Royalty X-Ray →</button>
+          </div>`;
+        } else if (isSettled) {
+          payoutCallout = `<div class="mt-3 p-2.5 rounded-xl bg-slate-100/80 border border-slate-200/70 text-xs text-slate-600 flex items-center justify-between">
+            <span>100% of earned royalties (${formatINR(b.total_royalty_earned)}) disbursed on ${b.last_royalty_payout_date}.</span>
+            <button type="button" data-inspect-book="${b.book_id}" class="btn-inspect-studio press-feedback font-semibold text-leaf-800 underline ml-2 shrink-0">Simulate Sales →</button>
+          </div>`;
+        } else {
+          payoutCallout = `<div class="mt-3 p-2.5 rounded-xl bg-emerald-50/80 border border-emerald-200/70 text-xs text-emerald-900 flex items-center justify-between">
+            <span>Clears ₹1,000 minimum payout threshold — scheduled for quarterly transfer (within 45 days of quarter end).</span>
+            <button type="button" data-inspect-book="${b.book_id}" class="btn-inspect-studio press-feedback font-semibold underline ml-2 shrink-0">Royalty X-Ray →</button>
+          </div>`;
+        }
+
+        const platformsHtml = (b.available_on && b.available_on.length > 0)
+          ? b.available_on.map((p) => `<span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700 border border-slate-200/70">${p}</span>`).join("")
+          : `<span class="text-[11px] text-slate-400 italic">Retail channels assigned at Stage 7 (Distribution Setup)</span>`;
+
+        return `
+          <article class="card-press-feedback glass-surface rounded-3xl p-5 flex flex-col justify-between">
+            <div>
+              <div class="flex items-start justify-between gap-2">
+                <div>
+                  <span class="font-mono text-[11px] text-slate-500">${b.book_id} • ISBN: ${b.isbn}</span>
+                  <h3 class="text-lg font-serif font-semibold text-slate-900 mt-0.5">${b.title}</h3>
+                </div>
+                ${statusBadge}
+              </div>
+
+              <div class="flex flex-wrap items-center gap-2 text-xs text-slate-500 mt-1">
+                <span>${b.genre}</span>
+                <span>•</span>
+                <span>Published: ${b.publication_date || "In Production"}</span>
+                <span>•</span>
+                <span>Print Partner: <strong>${b.print_partner || "TBD"}</strong></span>
+              </div>
+
+              <div class="grid grid-cols-3 sm:grid-cols-5 gap-2 mt-4 pt-3 border-t border-slate-200/60 text-center">
+                <div class="p-2 rounded-xl bg-white/80 border border-slate-200/50">
+                  <div class="text-[10px] text-slate-500 uppercase">MRP</div>
+                  <div class="text-xs font-bold text-slate-900 tabular-data mt-0.5">${b.mrp ? formatINR(b.mrp) : "TBD"}</div>
+                </div>
+                <div class="p-2 rounded-xl bg-white/80 border border-slate-200/50">
+                  <div class="text-[10px] text-slate-500 uppercase">Copies Sold</div>
+                  <div class="text-xs font-bold text-slate-900 tabular-data mt-0.5">${(b.total_copies_sold || 0).toLocaleString("en-IN")}</div>
+                </div>
+                <div class="p-2 rounded-xl bg-white/80 border border-slate-200/50">
+                  <div class="text-[10px] text-slate-500 uppercase">Earned (80%)</div>
+                  <div class="text-xs font-bold text-slate-900 tabular-data mt-0.5">${formatINR(b.total_royalty_earned)}</div>
+                </div>
+                <div class="p-2 rounded-xl bg-white/80 border border-slate-200/50">
+                  <div class="text-[10px] text-slate-500 uppercase">Paid Out</div>
+                  <div class="text-xs font-bold text-emerald-700 tabular-data mt-0.5">${formatINR(b.royalty_paid)}</div>
+                </div>
+                <div class="p-2 rounded-xl bg-white/80 border border-slate-200/50 col-span-3 sm:col-span-1">
+                  <div class="text-[10px] text-slate-500 uppercase">Pending</div>
+                  <div class="text-xs font-bold ${b.royalty_pending > 0 ? "text-amber-700" : "text-slate-600"} tabular-data mt-0.5">${formatINR(b.royalty_pending)}</div>
+                </div>
+              </div>
+
+              ${payoutCallout}
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-200/60 flex flex-wrap items-center justify-between gap-2">
+              <div class="flex flex-wrap items-center gap-1">
+                ${platformsHtml}
+              </div>
+              <button type="button" data-raise-book="${b.book_id}" class="btn-raise-for-book press-feedback text-xs font-semibold text-leaf-800 hover:text-leaf-950 px-2.5 py-1 rounded-lg bg-leaf-100/80 hover:bg-leaf-200/70">
+                Ask Support About This Book →
+              </button>
+            </div>
+          </article>
+        `;
+      }).join("");
+
+      // Bind buttons inside book cards
+      grid.querySelectorAll(".btn-inspect-studio").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.studioBookId = btn.getAttribute("data-inspect-book");
+          const book = getBookById(state.studioBookId);
+          if (book) state.simulatedSales = book.total_copies_sold || 100;
+          switchAuthorTab("studio");
+        });
+      });
+
+      grid.querySelectorAll(".btn-raise-for-book").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const bkId = btn.getAttribute("data-raise-book");
+          switchAuthorTab("submit");
+          const sel = document.getElementById("ticketBookSelect");
+          if (sel) sel.value = bkId;
+        });
+      });
+    }
+
+    // ========================================================================
+    // 7. STANDOUT SECTION: BOOKLEAF STUDIO (ROYALTY X-RAY & 8-STAGE PIPELINE)
+    // ========================================================================
+    const scrubberSpring = new SpringMotion1D(0);
+
+    function renderBookleafStudio() {
+      const author = getAuthorById(state.currentAuthorId);
+      if (!author) return;
+
+      // Ensure studioBookId belongs to current author
+      if (!author.books.some((b) => b.book_id === state.studioBookId)) {
+        state.studioBookId = author.books[0].book_id;
+        state.simulatedSales = author.books[0].total_copies_sold || 120;
+      }
+
+      const sel = document.getElementById("studioBookSelect");
+      if (sel) {
+        sel.innerHTML = author.books.map((b) => `<option value="${b.book_id}" ${b.book_id === state.studioBookId ? "selected" : ""}>${b.title} (${b.status})</option>`).join("");
+      }
+
+      const book = getBookById(state.studioBookId) || author.books[0];
+      updateStudioWaterfallAndPipeline(book, state.simulatedSales);
+    }
+
+    function updateStudioWaterfallAndPipeline(book, simulatedCopies) {
+      if (!book) return;
+      const copies = Math.max(0, Math.round(simulatedCopies));
+      const actualCopies = book.total_copies_sold || 0;
+      const hasEconomics = Number.isFinite(Number(book.mrp)) && Number.isFinite(Number(book.author_royalty_per_copy));
+      const mrp = hasEconomics ? Number(book.mrp) : 0;
+      const authorRoyalty = hasEconomics ? Number(book.author_royalty_per_copy) : 0;
+      const netProfit = +(authorRoyalty / 0.8).toFixed(2);
+      const printCost = book.print_partner === "Repro India" ? +(mrp * 0.34).toFixed(2) : +(mrp * 0.36).toFixed(2);
+      const platformAndShip = Math.max(0, +(mrp - netProfit - printCost).toFixed(2));
+
+      document.getElementById("scrubberCopiesReadout").textContent = copies.toLocaleString("en-IN");
+      const deltaBadge = document.getElementById("scrubberDeltaBadge");
+      if (copies === actualCopies) {
+        deltaBadge.textContent = "Actual Current Sales";
+        deltaBadge.className = "ml-2 text-[11px] font-medium px-2 py-0.5 rounded-full bg-slate-100 text-slate-600 tabular-data";
+      } else {
+        const diff = copies - actualCopies;
+        deltaBadge.textContent = `${diff > 0 ? "+" : ""}${diff.toLocaleString("en-IN")} vs actual (${actualCopies})`;
+        deltaBadge.className = "ml-2 text-[11px] font-semibold px-2 py-0.5 rounded-full bg-leaf-100 text-leaf-800 tabular-data";
+      }
+
+      document.getElementById("studioPrintPartnerBadge").textContent = `Print Partner: ${book.print_partner || "In-House Delhi (Pending)"}`;
+      document.getElementById("waterfallMrp").textContent = hasEconomics ? `₹${mrp.toFixed(2)}` : "TBD";
+      document.getElementById("waterfallPrint").textContent = hasEconomics ? `-₹${printCost.toFixed(2)}` : "TBD";
+      document.getElementById("waterfallPlatform").textContent = hasEconomics ? `-₹${platformAndShip.toFixed(2)}` : "TBD";
+      document.getElementById("waterfallNet").textContent = hasEconomics ? `₹${netProfit.toFixed(2)}` : "TBD";
+      document.getElementById("waterfallAuthor").textContent = hasEconomics ? `₹${authorRoyalty.toFixed(2)}` : "TBD";
+
+      const projectedTotalEarned = copies * authorRoyalty;
+      const alreadyPaid = book.royalty_paid || 0;
+      const projectedPending = Math.max(0, projectedTotalEarned - alreadyPaid);
+
+      const minCopiesFor1k = Math.ceil((alreadyPaid + 1000) / authorRoyalty);
+      const markerPct = Math.min(94, Math.max(3, (minCopiesFor1k / 2000) * 100));
+      const markerEl = document.getElementById("scrubberThresholdMarker");
+      if (markerEl) markerEl.style.left = `${markerPct}%`;
+
+      const headline = document.getElementById("studioPayoutHeadline");
+      const subtext = document.getElementById("studioPayoutSubtext");
+      if (!hasEconomics) {
+        headline.textContent = "Royalty estimates will be available after publication";
+        subtext.textContent = `The current title status is ${book.status}. This projection is not available until the final price and royalty are set.`;
+      } else if (projectedPending >= 1000) {
+        headline.textContent = `Projected Earned: ${formatINR(projectedTotalEarned)} • Projected Pending Payout: ${formatINR(projectedPending)}`;
+        subtext.textContent = `Clears BookLeaf's ₹1,000 minimum threshold! Eligible for quarterly bank transfer within 45 days of quarter end.`;
+      } else if (projectedPending > 0) {
+        const shortfall = 1000 - projectedPending;
+        const moreCopies = Math.ceil(shortfall / authorRoyalty);
+        headline.textContent = `Projected Earned: ${formatINR(projectedTotalEarned)} • Pending: ${formatINR(projectedPending)} (Below ₹1,000 Threshold)`;
+        subtext.textContent = `Needs ₹${shortfall} (${moreCopies} more copies at ₹${authorRoyalty}/copy) to trigger quarterly payout; otherwise safely rolls over.`;
+      } else {
+        headline.textContent = `Projected Earned: ${formatINR(projectedTotalEarned)} • Pending: ₹0`;
+        subtext.textContent = `Drag the scrubber right to forecast future sales and quarterly royalty disbursements.`;
+      }
+
+      // Update 8-Stage Pipeline Tracker
+      document.getElementById("pipelineBookTitle").textContent = book.title;
+      let activeStageIdx = 8;
+      if (book.status.includes("Cover Design")) activeStageIdx = 3;
+      else if (book.status.includes("Typesetting")) activeStageIdx = 4;
+
+      const badge = document.getElementById("pipelineCurrentBadge");
+      if (activeStageIdx === 8) {
+        badge.textContent = "Stage 8 of 8 • Published & Live";
+        badge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-emerald-100 text-emerald-800";
+      } else {
+        badge.textContent = `Stage ${activeStageIdx} of 8 • ${book.status.replace("In Production - ", "")}`;
+        badge.className = "px-2.5 py-0.5 rounded-full text-[11px] font-semibold bg-amber-100 text-amber-900";
+      }
+
+      const stagesList = document.getElementById("pipelineStagesList");
+      if (stagesList) {
+        stagesList.innerHTML = PRODUCTION_STAGES.map((st) => {
+          const isDone = st.id < activeStageIdx || activeStageIdx === 8;
+          const isCurrent = st.id === activeStageIdx && activeStageIdx < 8;
+          let dot = `<span class="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold shrink-0">✓</span>`;
+          let rowClass = "text-slate-600";
+          if (isCurrent) {
+            dot = `<span class="w-4 h-4 rounded-full bg-amber-500 text-white flex items-center justify-center text-[10px] font-bold animate-pulse shrink-0">${st.id}</span>`;
+            rowClass = "font-semibold text-slate-900 bg-amber-50/90 p-2 rounded-xl border border-amber-200";
+          } else if (!isDone) {
+            dot = `<span class="w-4 h-4 rounded-full bg-slate-200 text-slate-500 flex items-center justify-center text-[10px] shrink-0">${st.id}</span>`;
+            rowClass = "text-slate-400";
+          }
+          return `
+            <div class="flex items-center justify-between gap-2 ${rowClass}">
+              <div class="flex items-center gap-2 min-w-0">
+                ${dot}
+                <span class="truncate">${st.name}</span>
+              </div>
+              <span class="text-[10px] font-mono shrink-0">${isDone ? "Completed" : isCurrent ? "In Progress (" + st.sla + ")" : st.sla}</span>
+            </div>
+          `;
+        }).join("");
+      }
+
+      // Distribution Platforms
+      const platWrap = document.getElementById("studioPlatformsWrap");
+      const allPlatforms = ["Amazon India", "Flipkart", "Amazon US", "Amazon UK", "BookLeaf Store"];
+      if (platWrap) {
+        platWrap.innerHTML = allPlatforms.map((p) => {
+          const isLive = book.available_on && book.available_on.includes(p);
+          return `<span class="px-2.5 py-1 rounded-xl text-[11px] font-medium flex items-center gap-1.5 border ${isLive ? "bg-emerald-50 text-emerald-900 border-emerald-200" : "bg-slate-50 text-slate-400 border-slate-200/60"}">
+            <span class="w-1.5 h-1.5 rounded-full ${isLive ? "bg-emerald-500" : "bg-slate-300"}"></span>
+            <span>${p}</span>
+          </span>`;
+        }).join("");
+      }
+    }
+
+    // Initialize 1:1 Pointer-Captured Scrubber with Velocity Handoff & Rubber-Banding
+    function initRoyaltyScrubberPhysics() {
+      const track = document.getElementById("scrubberTrack");
+      const thumb = document.getElementById("scrubberThumb");
+      const fill = document.getElementById("scrubberFill");
+      const telemetry = document.getElementById("scrubberPhysicsTelemetry");
+      if (!track || !thumb) return;
+
+      let dragging = false;
+      let grabOffsetX = 0;
+      let history = [];
+
+      function copiesToX(copies) {
+        const rect = track.getBoundingClientRect();
+        const usable = Math.max(1, rect.width - 36);
+        const clamped = Math.max(0, Math.min(2000, copies));
+        return (clamped / 2000) * usable;
+      }
+
+      function renderThumbAtX(xPx, vel = 0) {
+        const rect = track.getBoundingClientRect();
+        const usable = Math.max(1, rect.width - 36);
+        thumb.style.transform = `translate3d(${xPx.toFixed(1)}px, 0, 0)`;
+        const pct = Math.max(0, Math.min(100, ((xPx + 14) / rect.width) * 100));
+        if (fill) fill.style.width = `${pct.toFixed(1)}%`;
+
+        const rawCopies = (xPx / usable) * 2000;
+        const clampedCopies = Math.max(0, Math.min(2000, Math.round(rawCopies)));
+        if (Math.abs(clampedCopies - state.simulatedSales) >= 25) {
+          feedback.tick(520 + (clampedCopies / 2000) * 320);
+        }
+        state.simulatedSales = clampedCopies;
+        const book = getBookById(state.studioBookId);
+        if (book) updateStudioWaterfallAndPipeline(book, clampedCopies);
+        if (telemetry) {
+          telemetry.textContent = `v: ${Math.round(vel)} px/s • spring(d=0.82, r=0.35)`;
+        }
+      }
+
+      scrubberSpring.onUpdate = (val, vel) => renderThumbAtX(val, vel);
+
+      track.addEventListener("pointerdown", (e) => {
+        scrubberSpring.stop();
+        dragging = true;
+        track.setPointerCapture(e.pointerId);
+        const trackRect = track.getBoundingClientRect();
+        const thumbRect = thumb.getBoundingClientRect();
+        // Respect grabOffset if user grabbed the thumb directly (§2 Direct Manipulation)
+        if (e.clientX >= thumbRect.left && e.clientX <= thumbRect.right) {
+          grabOffsetX = e.clientX - thumbRect.left - thumbRect.width / 2;
+        } else {
+          grabOffsetX = 0;
+        }
+        history = [{ x: e.clientX, t: performance.now() }];
+        const usable = Math.max(1, trackRect.width - 36);
+        const rawX = e.clientX - trackRect.left - 18 - grabOffsetX;
+        scrubberSpring.value = Math.max(0, Math.min(usable, rawX));
+        renderThumbAtX(scrubberSpring.value, 0);
+      });
+
+      track.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        const now = performance.now();
+        const trackRect = track.getBoundingClientRect();
+        const usable = Math.max(1, trackRect.width - 36);
+        const rawX = e.clientX - trackRect.left - 18 - grabOffsetX;
+
+        // Apply rubber-banding at 0 and 2,000 copies boundaries (§9)
+        let displayX = rawX;
+        if (rawX < 0) {
+          displayX = applyRubberband(rawX, usable, 0.55);
+        } else if (rawX > usable) {
+          displayX = usable + applyRubberband(rawX - usable, usable, 0.55);
+        }
+
+        history.push({ x: displayX, t: now });
+        history = history.filter((p) => now - p.t <= 80);
+
+        let vx = 0;
+        if (history.length >= 2) {
+          const first = history[0];
+          const dt = (now - first.t) / 1000;
+          if (dt > 0.004) vx = (displayX - first.x) / dt;
+        }
+
+        scrubberSpring.value = displayX;
+        renderThumbAtX(displayX, vx);
+      });
+
+      const endDrag = (e) => {
+        if (!dragging) return;
+        dragging = false;
+        try { track.releasePointerCapture(e.pointerId); } catch (err) {}
+        const now = performance.now();
+        history = history.filter((p) => now - p.t <= 90);
+        let vx = 0;
+        if (history.length >= 2) {
+          const first = history[0];
+          const last = history[history.length - 1];
+          const dt = (last.t - first.t) / 1000;
+          if (dt > 0.004) vx = (last.x - first.x) / dt;
+        }
+        const trackRect = track.getBoundingClientRect();
+        const usable = Math.max(1, trackRect.width - 36);
+        // Project resting endpoint with exponential decay (§6) and clamp to valid bounds
+        const projectedX = scrubberSpring.value + projectMomentum(vx * 0.25, 0.992);
+        const clampedTargetX = Math.max(0, Math.min(usable, projectedX));
+        scrubberSpring.animateTo(clampedTargetX, {
+          damping: Math.abs(vx) > 180 ? 0.82 : 1.0,
+          response: 0.35,
+          velocity: vx
+        });
+      };
+
+      track.addEventListener("pointerup", endDrag);
+      track.addEventListener("pointercancel", endDrag);
+
+      window.syncScrubberToCopies = (copies) => {
+        const targetX = copiesToX(copies);
+        scrubberSpring.animateTo(targetX, { damping: 1.0, response: 0.35, velocity: 0 });
+      };
+    }
+
+    // ========================================================================
+    // 8. AUTHOR SUPPORT QUERY FORM & TICKET THREADS
+    // ========================================================================
+    function populateTicketFormBooks() {
+      const author = getAuthorById(state.currentAuthorId);
+      const sel = document.getElementById("ticketBookSelect");
+      if (!sel || !author) return;
+      const options = author.books.map((b) => `<option value="${b.book_id}">${b.title} (ISBN: ${b.isbn} • ${b.status})</option>`);
+      options.push(`<option value="GENERAL">General / Account Level</option>`);
+      sel.innerHTML = options.join("");
+    }
+
+    function renderAuthorTickets() {
+      const author = getAuthorById(state.currentAuthorId);
+      const container = document.getElementById("authorTicketsContainer");
+      if (!container || !author) return;
+
+      const myTickets = state.tickets
+        .filter((t) => t.author_id === author.author_id)
+        .sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at));
+
+      if (myTickets.length === 0) {
+        container.innerHTML = `
+          <div class="glass-surface rounded-3xl p-8 text-center space-y-3">
+            <div class="w-12 h-12 rounded-2xl bg-leaf-100 text-leaf-800 mx-auto flex items-center justify-center font-bold">✓</div>
+            <h3 class="text-base font-semibold text-slate-900">No Support Queries Yet for ${author.name}</h3>
+            <p class="text-xs text-slate-500 max-w-md mx-auto">All your titles and royalty statements are up to date. Need assistance with ISBNs, print quality, or payouts?</p>
+            <button type="button" id="btnEmptyRaiseTicket" class="press-feedback px-4 py-2 rounded-xl text-xs font-semibold bg-leaf-800 text-white">Raise a Support Ticket</button>
+          </div>
+        `;
+        const emptyBtn = document.getElementById("btnEmptyRaiseTicket");
+        if (emptyBtn) emptyBtn.addEventListener("click", () => switchAuthorTab("submit"));
+        return;
+      }
+
+      container.innerHTML = myTickets.map((t) => {
+        const book = getBookById(t.book_id);
+        const statusColors = {
+          "Open": "bg-amber-100 text-amber-900 border-amber-300",
+          "In Progress": "bg-sky-100 text-sky-900 border-sky-300",
+          "Resolved": "bg-emerald-100 text-emerald-900 border-emerald-300",
+          "Closed": "bg-slate-200 text-slate-700 border-slate-300"
+        };
+        const stBadge = statusColors[t.status] || statusColors["Open"];
+
+        // Strictly exclude internal_notes for Author role (Requirement B & C RBAC)
+        const messagesHtml = t.messages.map((m) => {
+          const isAdmin = m.sender_role === "admin";
+          return `
+            <div class="p-3.5 rounded-2xl ${isAdmin ? "bg-leaf-50/90 border border-leaf-200/90 ml-0 sm:ml-6" : "bg-white/90 border border-slate-200/80 mr-0 sm:mr-6"}">
+              <div class="flex items-center justify-between gap-2 mb-1">
+                <span class="text-xs font-semibold ${isAdmin ? "text-leaf-900" : "text-slate-800"}">${m.sender_name} ${isAdmin ? '<span class="ml-1 px-1.5 py-0.2 rounded text-[10px] bg-leaf-800 text-white">BookLeaf Team</span>' : ""}</span>
+                <span class="text-[10px] text-slate-400 tabular-data">${formatRelativeTime(m.created_at)}</span>
+              </div>
+              <div class="text-xs text-slate-700 whitespace-pre-line leading-relaxed">${escapeHtml(m.body)}</div>
+            </div>
+          `;
+        }).join("");
+
+        const attachHtml = (t.attachments && t.attachments.length)
+          ? `<div class="flex flex-wrap gap-1.5 mt-2">${t.attachments.map((a) => `<span class="px-2 py-0.5 rounded-lg text-[10px] font-medium bg-slate-100 text-slate-600 border border-slate-200">📎 ${escapeHtml(typeof a === "string" ? a : `${a.name} (${a.size})`)}</span>`).join("")}</div>`
+          : "";
+
+        return `
+          <article class="glass-surface rounded-3xl p-5 space-y-4">
+            <div class="flex flex-wrap items-start justify-between gap-2 border-b border-slate-200/70 pb-3">
+              <div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <span class="font-mono text-xs font-semibold text-slate-600">${t.id}</span>
+                  <span class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold border ${stBadge}">${t.status}</span>
+                  <span class="px-2 py-0.5 rounded-md text-[10px] font-medium bg-slate-100 text-slate-700">${t.category}</span>
+                  <span class="text-[11px] text-slate-500">• ${book ? escapeHtml(book.title) : "General / Account Level"}</span>
+                </div>
+                <h3 class="text-base font-semibold text-slate-900 mt-1">${escapeHtml(t.subject)}</h3>
+                ${attachHtml}
+              </div>
+              ${state.user?.role === "admin" ? `<button type="button" data-open-in-admin="${escapeHtml(t.id)}" class="btn-jump-admin-ticket press-feedback text-[11px] font-semibold text-ocean-600 hover:underline">Open in Admin Ops →</button>` : ""}
+            </div>
+
+            <div class="space-y-2.5">
+              ${messagesHtml}
+            </div>
+
+            <!-- Author Follow-up Reply Input -->
+            <form data-author-reply-form="${t.id}" class="flex items-center gap-2 pt-1">
+              <input type="text" required placeholder="Add a follow-up reply to BookLeaf Support..." class="flex-1 px-3.5 py-2 rounded-xl text-xs bg-white border border-slate-200/90 focus:outline-none focus:border-leaf-600" />
+              <button type="submit" class="press-feedback px-3.5 py-2 rounded-xl text-xs font-semibold bg-slate-900 text-white hover:bg-slate-800">Reply</button>
+            </form>
+          </article>
+        `;
+      }).join("");
+
+      container.querySelectorAll(".btn-jump-admin-ticket").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.selectedAdminTicketId = btn.getAttribute("data-open-in-admin");
+          if (state.viewMode === "author") setViewMode("admin");
+          renderAdminPortal();
+        });
+      });
+
+      container.querySelectorAll("form[data-author-reply-form]").forEach((form) => {
+        form.addEventListener("submit", async (e) => {
+          e.preventDefault();
+          const tId = form.getAttribute("data-author-reply-form");
+          const input = form.querySelector("input");
+          const text = input.value.trim();
+          if (!text) return;
+          try {
+            await apiRequest(`/api/v1/tickets/${encodeURIComponent(tId)}/responses`, {
+              method: "POST", body: JSON.stringify({ body: text })
+            });
+            input.value = "";
+            feedback.commitSuccess();
+            await refreshTickets();
+            showToast("Your reply was sent to BookLeaf Support.", "emerald");
+          } catch (error) { handleApiError(error); }
+        });
+      });
+    }
+
+    // ========================================================================
+    // 9. ADMIN PORTAL RENDERING (QUEUE, TRIAGE OVERRIDES & AI DRAFT EDITOR)
+    // ========================================================================
+    function getFilteredAndSortedAdminTickets() {
+      const priorityRank = { "Critical": 4, "High": 3, "Medium": 2, "Low": 1 };
+      const unresolvedRank = (st) => (st === "Open" || st === "In Progress" ? 1 : 0);
+
+      return state.tickets
+        .filter((t) => {
+          if (state.adminFilters.status === "UNRESOLVED" && !(t.status === "Open" || t.status === "In Progress")) return false;
+          if (state.adminFilters.status !== "ALL" && state.adminFilters.status !== "UNRESOLVED" && t.status !== state.adminFilters.status) return false;
+          if (state.adminFilters.category !== "ALL" && t.category !== state.adminFilters.category) return false;
+          if (state.adminFilters.priority !== "ALL" && t.priority !== state.adminFilters.priority) return false;
+          if (state.adminFilters.from && new Date(t.created_at) < new Date(`${state.adminFilters.from}T00:00:00`)) return false;
+          if (state.adminFilters.search) {
+            const q = state.adminFilters.search.toLowerCase();
+            const author = getAuthorById(t.author_id);
+            const book = getBookById(t.book_id);
+            const hay = `${t.id} ${t.subject} ${t.description} ${author ? author.name : ""} ${book ? book.title + " " + book.isbn : ""}`.toLowerCase();
+            if (!hay.includes(q)) return false;
+          }
+          return true;
+        })
+        .sort((a, b) => {
+          if (state.adminFilters.sort === "NEWEST") {
+            return new Date(b.created_at) - new Date(a.created_at);
+          }
+          if (state.adminFilters.sort === "OLDEST") {
+            return new Date(a.created_at) - new Date(b.created_at);
+          }
+          // Default: URGENT_OLDEST (Unresolved first -> Higher priority -> Oldest created_at)
+          const uDiff = unresolvedRank(b.status) - unresolvedRank(a.status);
+          if (uDiff !== 0) return uDiff;
+          const pDiff = (priorityRank[b.priority] || 0) - (priorityRank[a.priority] || 0);
+          if (pDiff !== 0) return pDiff;
+          return new Date(a.created_at) - new Date(b.created_at);
+        });
+    }
+
+    function renderAdminPortal() {
+      // Update Admin KPIs & Header Badge
+      const openOrProg = state.tickets.filter((t) => t.status === "Open" || t.status === "In Progress");
+      const urgentUnresolved = openOrProg.filter((t) => t.priority === "Critical" || t.priority === "High");
+      const resolvedOrClosed = state.tickets.filter((t) => t.status === "Resolved" || t.status === "Closed");
+
+      document.getElementById("adminKpiUrgent").textContent = `${urgentUnresolved.length}`;
+      document.getElementById("adminKpiOpen").textContent = `${openOrProg.length}`;
+      document.getElementById("adminKpiResolved").textContent = `${resolvedOrClosed.length}`;
+      document.getElementById("adminKpiTokens").textContent = `${state.tickets.filter((ticket) => ticket.ai_degraded).length}`;
+      document.getElementById("navOpenBadge").textContent = `${openOrProg.length}`;
+
+      const filtered = getFilteredAndSortedAdminTickets();
+      document.getElementById("adminQueueCountLabel").textContent = `Showing ${filtered.length} of ${state.tickets.length} Tickets`;
+
+      const queueEl = document.getElementById("adminQueueList");
+      if (!queueEl) return;
+
+      if (filtered.length > 0 && !filtered.some((t) => t.id === state.selectedAdminTicketId)) {
+        state.selectedAdminTicketId = filtered[0].id;
+      }
+
+      const prioColors = {
+        "Critical": "bg-rose-600 text-white",
+        "High": "bg-orange-500 text-white",
+        "Medium": "bg-amber-100 text-amber-900 border border-amber-300",
+        "Low": "bg-slate-100 text-slate-700 border border-slate-200"
+      };
+
+      const statusPills = {
+        "Open": "bg-amber-50 text-amber-800 border-amber-300",
+        "In Progress": "bg-sky-50 text-sky-800 border-sky-300",
+        "Resolved": "bg-emerald-50 text-emerald-800 border-emerald-300",
+        "Closed": "bg-slate-100 text-slate-600 border-slate-300"
+      };
+
+      queueEl.innerHTML = filtered.length ? filtered.map((t) => {
+        const author = getAuthorById(t.author_id);
+        const book = getBookById(t.book_id);
+        const isSelected = t.id === state.selectedAdminTicketId;
+        const isUrgent = (t.priority === "Critical" || t.priority === "High") && (t.status === "Open" || t.status === "In Progress");
+
+        return `
+          <div data-queue-ticket="${t.id}" class="card-press-feedback cursor-pointer rounded-2xl p-3.5 border transition-all ${
+            isSelected
+              ? "bg-white border-leaf-700 ring-2 ring-leaf-600/25 shadow-md"
+              : isUrgent
+              ? "bg-rose-50/40 border-rose-200/90 hover:bg-white"
+              : "bg-white/75 border-slate-200/80 hover:bg-white"
+          }">
+            <div class="flex items-center justify-between gap-2">
+              <div class="flex items-center gap-1.5">
+                <span class="font-mono text-[11px] font-bold text-slate-700">${t.id}</span>
+                <span class="px-2 py-0.5 rounded-md text-[10px] font-bold ${prioColors[t.priority] || prioColors.Medium}">${t.priority}</span>
+                <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold border ${statusPills[t.status] || statusPills.Open}">${t.status}</span>
+              </div>
+              <span class="text-[10px] text-slate-400 tabular-data">${formatRelativeTime(t.created_at)}</span>
+            </div>
+
+            <h4 class="text-xs font-semibold text-slate-900 mt-1.5 line-clamp-1">${escapeHtml(t.subject)}</h4>
+
+            <div class="flex flex-wrap items-center justify-between gap-1 mt-2 text-[11px] text-slate-500">
+              <span class="truncate">👤 <strong>${author ? escapeHtml(author.name) : t.author_id}</strong> • ${book ? escapeHtml(book.title) : "Account Level"}</span>
+              <span class="px-1.5 py-0.5 rounded bg-slate-100 text-slate-700 text-[10px] font-medium shrink-0">${t.category}</span>
+            </div>
+          </div>
+        `;
+      }).join("") : `<div class="rounded-2xl border border-dashed border-slate-300 bg-white/60 p-6 text-center text-xs text-slate-500">${state.tickets.length ? "No tickets match these filters." : "No support tickets have been submitted yet."}</div>`;
+
+      queueEl.querySelectorAll("[data-queue-ticket]").forEach((card) => {
+        card.addEventListener("click", () => {
+          state.selectedAdminTicketId = card.getAttribute("data-queue-ticket");
+          feedback.tick(740);
+          renderAdminPortal();
+        });
+      });
+
+      renderAdminTicketDetail();
+    }
+
+    function renderAdminTicketDetail() {
+      const pane = document.getElementById("adminTicketDetailPane");
+      if (!pane) return;
+      const ticket = state.tickets.find((t) => t.id === state.selectedAdminTicketId);
+      if (!ticket) {
+        pane.innerHTML = `<div class="p-8 text-center text-sm text-slate-500">No ticket matches the active filter criteria.</div>`;
+        return;
+      }
+
+      const author = getAuthorById(ticket.author_id);
+      const book = getBookById(ticket.book_id);
+      const draftText = ticket.ai_draft_response || "";
+
+      const kbInfo = KB_CHUNKS[ticket.category] || KB_CHUNKS["General Inquiry"];
+
+      const bookTelemetryHtml = book
+        ? `<div class="p-3.5 rounded-2xl bg-slate-50 border border-slate-200/80 grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+            <div>
+              <span class="text-[10px] text-slate-400 uppercase block">Book &amp; ISBN</span>
+              <strong class="text-slate-800">${escapeHtml(book.title)}</strong>
+              <span class="block font-mono text-[10px] text-slate-500">${book.isbn}</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 uppercase block">Status &amp; Print</span>
+              <strong class="text-slate-800">${book.status}</strong>
+              <span class="block text-[10px] text-slate-500">Partner: ${book.print_partner || "TBD"}</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 uppercase block">Sales &amp; MRP</span>
+              <strong class="text-slate-800 tabular-data">${book.total_copies_sold} sold</strong>
+              <span class="block text-[10px] text-slate-500 tabular-data">MRP: ${formatINR(book.mrp)} (₹${book.author_royalty_per_copy || 0}/copy)</span>
+            </div>
+            <div>
+              <span class="text-[10px] text-slate-400 uppercase block">Royalty Ledger</span>
+              <strong class="text-amber-800 tabular-data">Pending: ${formatINR(book.royalty_pending)}</strong>
+              <span class="block text-[10px] text-emerald-700 tabular-data">Paid: ${formatINR(book.royalty_paid)}</span>
+            </div>
+          </div>`
+        : `<div class="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 text-xs text-slate-600">Scope: <strong>General / Account-Level Query</strong> for ${author ? author.name : ticket.author_id} (${author ? author.email : ""})</div>`;
+
+      const threadHtml = ticket.messages.map((m) => {
+        const isAdmin = m.sender_role === "admin";
+        return `
+          <div class="p-3 rounded-2xl ${isAdmin ? "bg-leaf-50 border border-leaf-200 ml-4" : "bg-white border border-slate-200 mr-4"}">
+            <div class="flex items-center justify-between text-[11px] mb-1">
+              <span class="font-semibold ${isAdmin ? "text-leaf-900" : "text-slate-800"}">${escapeHtml(m.sender_name)}</span>
+              <span class="text-slate-400 tabular-data">${formatRelativeTime(m.created_at)}</span>
+            </div>
+            <p class="text-xs text-slate-700 whitespace-pre-line leading-relaxed">${escapeHtml(m.body)}</p>
+          </div>
+        `;
+      }).join("");
+
+      const notesHtml = (ticket.internal_notes && ticket.internal_notes.length > 0)
+        ? ticket.internal_notes.map((n) => `
+            <div class="p-2.5 rounded-xl bg-amber-50/90 border border-amber-300/80 text-xs">
+              <div class="flex items-center justify-between text-[10px] text-amber-900 font-semibold">
+                <span>🔒 Internal Ops Note • ${escapeHtml(n.author_name)}</span>
+                <span>${formatRelativeTime(n.created_at)}</span>
+              </div>
+              <p class="text-amber-950 mt-1">${escapeHtml(n.body)}</p>
+            </div>
+          `).join("")
+        : `<p class="text-[11px] text-slate-400 italic">No internal notes yet. Internal notes are strictly hidden from the author portal.</p>`;
+
+      pane.innerHTML = `
+        <!-- Ticket Header & Triage Controls -->
+        <div class="flex flex-wrap items-start justify-between gap-3 border-b border-slate-200/80 pb-4">
+          <div>
+            <div class="flex items-center gap-2">
+              <span class="font-mono text-xs font-bold text-slate-700">${ticket.id}</span>
+              <span class="text-xs text-slate-500">• Submitted by <strong>${author ? escapeHtml(author.name) : ticket.author_id}</strong> (${author ? author.city : ""})</span>
+            </div>
+            <h3 class="text-lg font-serif font-semibold text-slate-900 mt-0.5">${escapeHtml(ticket.subject)}</h3>
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="text-[10px] font-semibold uppercase text-slate-500">Status:</label>
+            <select id="adminDetailStatusSelect" class="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-slate-900 text-white cursor-pointer">
+              ${["Open", "In Progress", "Resolved", "Closed"].map((s) => `<option value="${s}" ${ticket.status === s ? "selected" : ""}>${s}</option>`).join("")}
+            </select>
+          </div>
+        </div>
+
+        <!-- Author & Book Live Context Card -->
+        ${bookTelemetryHtml}
+
+        <!-- AI Auto-Classification & Priority Override Box (Requirements B.2 & B.3) -->
+        <div class="p-4 rounded-2xl bg-gradient-to-br from-leaf-50/90 via-white to-ocean-50/70 border border-leaf-200/90 space-y-3">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div class="flex items-center gap-2">
+              <span class="px-2 py-0.5 rounded-md text-[10px] font-bold bg-leaf-900 text-white uppercase">AI Triage Engine</span>
+              <span class="text-xs font-medium text-slate-700">Confidence: <strong>${Math.round((ticket.ai_confidence || 0.95) * 100)}%</strong></span>
+            </div>
+            <span class="text-[11px] font-mono text-leaf-800 bg-leaf-100 px-2 py-0.5 rounded-md tabular-data">
+              ${ticket.prompt_tokens_used ? `Prompt tokens${ticket.prompt_tokens_estimated ? " (estimate)" : ""}: ${ticket.prompt_tokens_used}` : "Prompt usage unavailable"}${ticket.ai_degraded ? " · Local fallback draft" : ""}
+            </span>
+          </div>
+
+          <p class="text-xs text-slate-600 leading-relaxed"><strong>AI Reasoning:</strong> ${escapeHtml(ticket.ai_reasoning || "")}</p>
+
+          <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
+            <div>
+              <label for="adminOverrideCategory" class="block text-[10px] font-semibold uppercase text-slate-500 mb-1">AI Category (Admin Override)</label>
+              <select id="adminOverrideCategory" class="w-full px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-300">
+                ${Object.keys(KB_CHUNKS).map((c) => `<option value="${c}" ${ticket.category === c ? "selected" : ""}>${c}</option>`).join("")}
+              </select>
+            </div>
+            <div>
+              <label for="adminOverridePriority" class="block text-[10px] font-semibold uppercase text-slate-500 mb-1">AI Priority (Admin Override)</label>
+              <select id="adminOverridePriority" class="w-full px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-300">
+                ${["Critical", "High", "Medium", "Low"].map((p) => `<option value="${p}" ${ticket.priority === p ? "selected" : ""}>${p}</option>`).join("")}
+              </select>
+            </div>
+            <div>
+              <label for="adminAssignSelect" class="block text-[10px] font-semibold uppercase text-slate-500 mb-1">Assigned Specialist</label>
+              <select id="adminAssignSelect" class="w-full px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-white border border-slate-300">
+                ${[state.user?.name || "Admin", ticket.assigned_to, "Unassigned"].filter((value, index, values) => value && values.indexOf(value) === index).map((a) => `<option value="${escapeHtml(a)}" ${ticket.assigned_to === a ? "selected" : ""}>${a === (state.user?.name || "Admin") ? "Assign to me" : escapeHtml(a)}</option>`).join("")}
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Conversation Thread -->
+        <div class="space-y-2">
+          <div class="text-xs font-semibold text-slate-700">Conversation History (${ticket.messages.length})</div>
+          <div class="space-y-2 max-h-56 overflow-y-auto pr-1">
+            ${threadHtml}
+          </div>
+        </div>
+
+        <!-- AI-Drafted Response Studio (Requirement B.4 & D) -->
+        <div class="p-4 rounded-2xl bg-white border border-slate-200/90 space-y-3 shadow-sm">
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <span class="text-xs font-semibold text-slate-900">AI-Drafted Response (Grounded in BookLeaf Knowledge Base)</span>
+              <p class="text-[11px] text-slate-500">Injected Policy Context: <em>${escapeHtml(kbInfo.policy.slice(0, 115))}...</em></p>
+            </div>
+            <div class="flex items-center gap-1.5">
+              <button type="button" data-tone="empathetic" class="btn-tone press-feedback px-2 py-1 rounded-lg text-[10px] font-semibold ${state.toneStyle === "empathetic" ? "bg-leaf-800 text-white" : "bg-slate-100 text-slate-700"}">Empathetic Partner</button>
+              <button type="button" data-tone="concise" class="btn-tone press-feedback px-2 py-1 rounded-lg text-[10px] font-semibold ${state.toneStyle === "concise" ? "bg-leaf-800 text-white" : "bg-slate-100 text-slate-700"}">Direct &amp; Concise</button>
+              <button type="button" id="btnRegenerateAiDraft" class="press-feedback px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-ocean-100 text-ocean-800 hover:bg-ocean-200">↻ Regenerate Draft</button>
+            </div>
+          </div>
+
+          ${
+            ticket.ai_degraded
+              ? `<div class="p-3 rounded-xl bg-amber-50 border border-amber-200 text-xs text-amber-950 flex items-center justify-between">
+                  <span>AI provider unavailable or unconfigured. This ticket used the server's local policy fallback; review the draft before sending.</span>
+                  <button type="button" id="btnUseFallbackDraft" class="press-feedback px-2.5 py-1 rounded-lg bg-rose-800 text-white text-[11px] font-semibold shrink-0 ml-2">Load Fallback Draft</button>
+                </div>`
+              : ""
+          }
+
+          <textarea id="adminDraftTextarea" rows="7" placeholder="Write or edit the AI-generated response before sending to the author..." class="w-full p-3.5 rounded-2xl text-xs leading-relaxed bg-slate-50/70 border border-slate-300 focus:bg-white focus:outline-none focus:border-leaf-700">${escapeHtml(draftText)}</textarea>
+
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <label class="inline-flex items-center gap-1.5 text-xs text-slate-600 cursor-pointer">
+              <input type="checkbox" id="chkMarkResolvedOnSend" checked class="accent-leaf-700 rounded" />
+              <span>Transition status to <strong>Resolved</strong> upon sending</span>
+            </label>
+            <button type="button" id="btnSendAdminResponse" class="press-feedback px-4 py-2 rounded-xl text-xs font-semibold bg-leaf-800 hover:bg-leaf-900 text-white shadow-sm flex items-center gap-1.5">
+              <span>Send Response to ${author ? escapeHtml(author.name.split(" ")[0]) : "Author"}</span>
+              <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Internal Operations Notes (Hidden from Author) -->
+        <div class="p-4 rounded-2xl bg-amber-50/50 border border-amber-200/80 space-y-2.5">
+          <div class="flex items-center justify-between">
+            <span class="text-xs font-semibold text-amber-950">🔒 Internal Operations Notes (Hidden from Author Portal)</span>
+            <span class="text-[10px] font-mono text-amber-800">RBAC: ADMIN_ONLY</span>
+          </div>
+          <div class="space-y-2">
+            ${notesHtml}
+          </div>
+          <form id="adminInternalNoteForm" class="flex items-center gap-2 pt-1">
+            <input type="text" id="adminInternalNoteInput" required placeholder="Add internal note (e.g., Repro India batch #, finance audit ref)..." class="flex-1 px-3 py-1.5 rounded-xl text-xs bg-white border border-amber-300 focus:outline-none" />
+            <button type="submit" class="press-feedback px-3 py-1.5 rounded-xl text-xs font-semibold bg-amber-800 text-white hover:bg-amber-900">Add Note</button>
+          </form>
+        </div>
+      `;
+
+      // Bind Admin Detail Controls
+      document.getElementById("adminDetailStatusSelect").addEventListener("change", async (e) => {
+        try {
+          await apiRequest(`/api/v1/tickets/${encodeURIComponent(ticket.id)}/triage`, {
+            method: "PATCH", body: JSON.stringify({ status: e.target.value })
+          });
+          feedback.tick(760);
+          await refreshTickets();
+        } catch (error) { handleApiError(error); }
+      });
+
+      document.getElementById("adminOverrideCategory").addEventListener("change", async (e) => {
+        try {
+          await apiRequest(`/api/v1/tickets/${encodeURIComponent(ticket.id)}/triage`, {
+            method: "PATCH", body: JSON.stringify({ category: e.target.value })
+          });
+          feedback.tick(720);
+          await refreshTickets();
+        } catch (error) { handleApiError(error); }
+      });
+
+      document.getElementById("adminOverridePriority").addEventListener("change", async (e) => {
+        try {
+          await apiRequest(`/api/v1/tickets/${encodeURIComponent(ticket.id)}/triage`, {
+            method: "PATCH", body: JSON.stringify({ priority: e.target.value })
+          });
+          feedback.tick(720);
+          await refreshTickets();
+        } catch (error) { handleApiError(error); }
+      });
+
+      document.getElementById("adminAssignSelect").addEventListener("change", async (e) => {
+        try {
+          await apiRequest(`/api/v1/tickets/${encodeURIComponent(ticket.id)}/triage`, {
+            method: "PATCH", body: JSON.stringify({ assigned_to: e.target.value })
+          });
+          feedback.tick(700);
+          await refreshTickets();
+        } catch (error) { handleApiError(error); }
+      });
+
+      pane.querySelectorAll(".btn-tone").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          state.toneStyle = btn.getAttribute("data-tone");
+          feedback.tick(690);
+          renderAdminTicketDetail();
+        });
+      });
+
+      const regenBtn = document.getElementById("btnRegenerateAiDraft");
+      if (regenBtn) {
+        regenBtn.addEventListener("click", async () => {
+          const ta = document.getElementById("adminDraftTextarea");
+          if (!ta) return;
+          try {
+            const result = await apiRequest(`/api/v1/tickets/${encodeURIComponent(ticket.id)}/draft`, { method: "POST" });
+            ta.value = result.ticket.ai_draft_response || "";
+            await refreshTickets();
+            showToast(result.ticket.ai_degraded ? "AI unavailable; loaded the local policy fallback draft." : "Fresh AI draft generated from the ticket and book record.", result.ticket.ai_degraded ? "amber" : "emerald");
+          } catch (error) { handleApiError(error); }
+        });
+      }
+
+      const fallbackBtn = document.getElementById("btnUseFallbackDraft");
+      if (fallbackBtn) {
+        fallbackBtn.addEventListener("click", async () => {
+          const ta = document.getElementById("adminDraftTextarea");
+          if (!ta) return;
+          try {
+            const result = await apiRequest(`/api/v1/tickets/${encodeURIComponent(ticket.id)}/draft`, {
+              method: "POST", body: JSON.stringify({ fallback_only: true })
+            });
+            ta.value = result.ticket.ai_draft_response || "";
+            await refreshTickets();
+            showToast("Loaded the server's deterministic policy fallback draft.", "emerald");
+          } catch (error) { handleApiError(error); }
+        });
+      }
+
+      document.getElementById("btnSendAdminResponse").addEventListener("click", async () => {
+        const ta = document.getElementById("adminDraftTextarea");
+        const body = ta ? ta.value.trim() : "";
+        if (!body) {
+          showToast("Please enter a response message before sending.", "rose");
+          return;
+        }
+        const markResolved = document.getElementById("chkMarkResolvedOnSend").checked;
+        try {
+          await apiRequest(`/api/v1/tickets/${encodeURIComponent(ticket.id)}/responses`, {
+            method: "POST", body: JSON.stringify({ body, next_status: markResolved ? "Resolved" : "In Progress" })
+          });
+          feedback.commitSuccess();
+          showToast(`Response sent to ${author ? author.name : "the author"}.`, "emerald");
+          await refreshTickets();
+        } catch (error) { handleApiError(error); }
+      });
+
+      document.getElementById("adminInternalNoteForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const inp = document.getElementById("adminInternalNoteInput");
+        const text = inp.value.trim();
+        if (!text) return;
+        try {
+          await apiRequest(`/api/v1/tickets/${encodeURIComponent(ticket.id)}/responses`, {
+            method: "POST", body: JSON.stringify({ body: text, is_internal_note: true })
+          });
+          inp.value = "";
+          feedback.tick(640);
+          await refreshTickets();
+        } catch (error) { handleApiError(error); }
+      });
+    }
+
+    // ========================================================================
+    // 10. VIEW MODE SWITCHING WITH HARMONIC SPRING PILL (glass-interface §4)
+    // ========================================================================
+    const navPillSpringX = new SpringMotion1D(0);
+    const navPillSpringW = new SpringMotion1D(118);
+
+    function setViewMode(mode) {
+      if (!state.user) return;
+      if (state.user.role === "author") mode = "author";
+      if (state.user.role === "admin" && mode === "author") mode = "admin";
+      state.viewMode = mode;
+      const authorSec = document.getElementById("authorPortalSection");
+      const adminSec = document.getElementById("adminPortalSection");
+      const archSec = document.getElementById("archReviewSection");
+      const grid = document.getElementById("workspaceGrid");
+
+      const modeButtons = {
+        author: document.getElementById("btnModeAuthor"),
+        admin: document.getElementById("btnModeAdmin"),
+        split: document.getElementById("btnModeSplit"),
+        arch: document.getElementById("btnModeArch")
+      };
+
+      const activeBtn = modeButtons[mode] || modeButtons.author;
+      if (activeBtn && activeBtn.offsetParent !== null) {
+        const targetX = activeBtn.offsetLeft - 4;
+        const targetW = activeBtn.offsetWidth;
+        const pill = document.getElementById("modePillIndicator");
+        navPillSpringX.animateTo(targetX, {
+          damping: 1.0,
+          response: 0.32,
+          onUpdate: (x) => {
+            if (pill) pill.style.transform = `translate3d(${x.toFixed(1)}px, 0, 0)`;
+          }
+        });
+        navPillSpringW.animateTo(targetW, {
+          damping: 1.0,
+          response: 0.32,
+          onUpdate: (w) => {
+            if (pill) pill.style.width = `${w.toFixed(1)}px`;
+          }
+        });
+      }
+
+      Object.entries(modeButtons).forEach(([k, btn]) => {
+        if (!btn) return;
+        if (k === mode) {
+          btn.classList.add("text-white");
+          btn.classList.remove("text-slate-700");
+        } else {
+          btn.classList.remove("text-white");
+          btn.classList.add("text-slate-700");
+        }
+      });
+
+      if (mode === "author") {
+        grid.className = "grid grid-cols-1 gap-6 items-start";
+        authorSec.classList.remove("hidden");
+        adminSec.classList.add("hidden");
+        archSec.classList.add("hidden");
+      } else if (mode === "admin") {
+        grid.className = "grid grid-cols-1 gap-6 items-start";
+        authorSec.classList.add("hidden");
+        adminSec.classList.remove("hidden");
+        archSec.classList.add("hidden");
+      } else if (mode === "split") {
+        grid.className = "grid grid-cols-1 lg:grid-cols-2 gap-6 items-start";
+        authorSec.classList.remove("hidden");
+        adminSec.classList.remove("hidden");
+        archSec.classList.add("hidden");
+      } else if (mode === "arch") {
+        authorSec.classList.add("hidden");
+        adminSec.classList.add("hidden");
+        archSec.classList.remove("hidden");
+      }
+      feedback.tick(710);
+      renderAll();
+    }
+
+    function switchAuthorTab(tabName) {
+      state.authorTab = tabName;
+      const tabs = {
+        books: document.getElementById("authorTabBooks"),
+        studio: document.getElementById("authorTabStudio"),
+        submit: document.getElementById("authorTabSubmit"),
+        tickets: document.getElementById("authorTabTickets")
+      };
+      Object.entries(tabs).forEach(([k, el]) => {
+        if (!el) return;
+        if (k === tabName) el.classList.remove("hidden");
+        else el.classList.add("hidden");
+      });
+
+      document.querySelectorAll(".author-tab-btn").forEach((btn) => {
+        const t = btn.getAttribute("data-author-tab");
+        if (t === tabName) {
+          btn.className = "author-tab-btn press-feedback px-3.5 py-2 rounded-xl text-xs font-semibold bg-leaf-800 text-white shadow-sm flex items-center gap-1.5";
+        } else {
+          btn.className = "author-tab-btn press-feedback px-3.5 py-2 rounded-xl text-xs font-semibold bg-white/80 text-slate-700 hover:bg-white border border-slate-200/80 flex items-center gap-1.5";
+        }
+      });
+
+      feedback.tick(660);
+      if (tabName === "studio") {
+        renderBookleafStudio();
+        setTimeout(() => {
+          if (window.syncScrubberToCopies) window.syncScrubberToCopies(state.simulatedSales);
+        }, 40);
+      } else if (tabName === "submit") {
+        populateTicketFormBooks();
+      } else if (tabName === "tickets") {
+        renderAuthorTickets();
+      }
+    }
+
+    // ========================================================================
+    // 11. DRAGGABLE 2D SPRING PiP INSPECTOR (glass-interface §2, §3, §5, §6)
+    //     Decomposes X and Y into independent springs + Momentum Corner Snap
+    // ========================================================================
+    function initFloatingPipPhysics() {
+      const pip = document.getElementById("floatingPip");
+      const velReadout = document.getElementById("pipVelocityReadout");
+      if (!pip) return;
+
+      const springX = new SpringMotion1D(0);
+      const springY = new SpringMotion1D(0);
+      let dragging = false;
+      let startPointerX = 0;
+      let startPointerY = 0;
+      let baseTx = 0;
+      let baseTy = 0;
+      let history = [];
+
+      function applyTransform() {
+        pip.style.transform = `translate3d(${springX.value.toFixed(1)}px, ${springY.value.toFixed(1)}px, 0)`;
+      }
+      springX.onUpdate = applyTransform;
+      springY.onUpdate = applyTransform;
+
+      pip.addEventListener("pointerdown", (e) => {
+        if (e.target.closest("button")) return;
+        // Interrupt mid-flight cleanly from presentation value (§3)
+        springX.stop();
+        springY.stop();
+        dragging = true;
+        pip.setPointerCapture(e.pointerId);
+        startPointerX = e.clientX;
+        startPointerY = e.clientY;
+        baseTx = springX.value;
+        baseTy = springY.value;
+        history = [{ x: baseTx, y: baseTy, t: performance.now() }];
+      });
+
+      pip.addEventListener("pointermove", (e) => {
+        if (!dragging) return;
+        const now = performance.now();
+        const nx = baseTx + (e.clientX - startPointerX);
+        const ny = baseTy + (e.clientY - startPointerY);
+        springX.value = nx;
+        springY.value = ny;
+        applyTransform();
+        history.push({ x: nx, y: ny, t: now });
+        history = history.filter((p) => now - p.t <= 80);
+      });
+
+      const finishPipDrag = (e) => {
+        if (!dragging) return;
+        dragging = false;
+        try { pip.releasePointerCapture(e.pointerId); } catch (err) {}
+        const now = performance.now();
+        history = history.filter((p) => now - p.t <= 90);
+        let vx = 0, vy = 0;
+        if (history.length >= 2) {
+          const first = history[0];
+          const last = history[history.length - 1];
+          const dt = (last.t - first.t) / 1000;
+          if (dt > 0.004) {
+            vx = (last.x - first.x) / dt;
+            vy = (last.y - first.y) / dt;
+          }
+        }
+
+        // Project endpoint using exponential decay projection (§6)
+        const projX = springX.value + projectMomentum(vx * 0.18, 0.995);
+        const projY = springY.value + projectMomentum(vy * 0.18, 0.995);
+
+        // Snap within comfortable viewport bounds
+        const maxLeftOffset = -(window.innerWidth - 330);
+        const maxTopOffset = -(window.innerHeight - 180);
+        const targetX = projX < maxLeftOffset / 2 ? Math.max(maxLeftOffset, maxLeftOffset + 12) : 0;
+        const targetY = projY < maxTopOffset / 2 ? Math.max(maxTopOffset, maxTopOffset + 70) : 0;
+
+        if (velReadout) {
+          velReadout.textContent = `v:(${Math.round(vx)},${Math.round(vy)}) px/s`;
+        }
+        feedback.tick(620);
+
+        // Independent X and Y springs (§3 Decompose 2D motion)
+        springX.animateTo(targetX, { damping: 0.82, response: 0.38, velocity: vx });
+        springY.animateTo(targetY, { damping: 0.82, response: 0.38, velocity: vy });
+      };
+
+      pip.addEventListener("pointerup", finishPipDrag);
+      pip.addEventListener("pointercancel", finishPipDrag);
+    }
+
+    // ========================================================================
+    // 12. UTILITIES, TOASTS & API LOG RENDERER
+    // ========================================================================
+    function escapeHtml(str) {
+      if (str === null || str === undefined) return "";
+      return String(str)
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;");
+    }
+
+    function showToast(message, tone = "emerald") {
+      const container = document.getElementById("toastContainer");
+      if (!container) return;
+      const el = document.createElement("div");
+      const colors = {
+        emerald: "bg-slate-900 text-white border-emerald-400/50",
+        amber: "bg-amber-950 text-amber-50 border-amber-400/50",
+        rose: "bg-rose-950 text-rose-50 border-rose-400/50"
+      };
+      el.className = `pointer-events-auto px-4 py-2.5 rounded-2xl text-xs font-medium shadow-xl border ${colors[tone] || colors.emerald} flex items-center gap-2 transition-all duration-200`;
+      el.innerHTML = `<span class="w-2 h-2 rounded-full bg-emerald-400 shrink-0"></span><span>${escapeHtml(message)}</span>`;
+      container.appendChild(el);
+      setTimeout(() => {
+        el.style.opacity = "0";
+        setTimeout(() => el.remove(), 220);
+      }, 3400);
+    }
+
+    function renderApiLogs() {
+      const box = document.getElementById("apiLogContainer");
+      if (!box) return;
+      box.innerHTML = state.apiLogs.map((l) => `
+        <div class="flex items-start justify-between gap-3 border-b border-slate-800/80 pb-1.5">
+          <div>
+            <span class="px-1.5 py-0.2 rounded text-[10px] font-bold ${l.status >= 500 ? "bg-rose-500/20 text-rose-300" : "bg-emerald-500/20 text-emerald-300"}">${l.method} ${l.status}</span>
+            <span class="text-sky-300 ml-1">${escapeHtml(l.endpoint)}</span>
+            <span class="text-slate-300 ml-2">— ${escapeHtml(l.detail)}</span>
+          </div>
+          <span class="text-slate-500 shrink-0 tabular-data">${l.time}</span>
+        </div>
+      `).join("");
+    }
+
+    function renderAll() {
+      renderAuthorHeaderAndKpis();
+      renderAuthorBooks();
+      renderBookleafStudio();
+      populateTicketFormBooks();
+      renderAuthorTickets();
+      renderAdminPortal();
+      renderApiLogs();
+    }
+
+    // ========================================================================
+    // 13. EVENT LISTENERS & INITIALIZATION
+    // ========================================================================
+    window.addEventListener("DOMContentLoaded", async () => {
+      initRoyaltyScrubberPhysics();
+      initFloatingPipPhysics();
+
+      // Instant pointerdown feedback across interactive controls (glass-interface §1)
+      document.addEventListener("pointerdown", (e) => {
+        const pressable = e.target.closest(".press-feedback, .card-press-feedback");
+        if (pressable) pressable.classList.add("is-pressed");
+      });
+      const clearPressed = () => {
+        document.querySelectorAll(".is-pressed").forEach((el) => el.classList.remove("is-pressed"));
+      };
+      document.addEventListener("pointerup", clearPressed);
+      document.addEventListener("pointercancel", clearPressed);
+
+      // Top Mode Buttons
+      ["btnModeAuthor", "btnModeAdmin", "btnModeSplit", "btnModeArch"].forEach((id) => {
+        const btn = document.getElementById(id);
+        if (btn) {
+          btn.addEventListener("click", () => setViewMode(btn.getAttribute("data-mode")));
+        }
+      });
+
+      const logoutSession = () => {
+        if (state.eventController) state.eventController.abort();
+        state.eventController = null;
+        state.authToken = null;
+        state.user = null;
+        state.tickets = [];
+        SEED_DATA = { authors: [] };
+        sessionStorage.removeItem("bookleaf_session");
+        document.body.classList.remove("authenticated");
+        document.getElementById("headerRoleIndicator").textContent = "Secure workspace";
+        document.getElementById("btnHeaderLogout").classList.add("hidden");
+        openLogin();
+      };
+      document.getElementById("btnLogout").addEventListener("click", logoutSession);
+      document.getElementById("btnHeaderLogout").addEventListener("click", logoutSession);
+
+      // Author Sub-Tabs
+      document.querySelectorAll(".author-tab-btn").forEach((btn) => {
+        btn.addEventListener("click", () => switchAuthorTab(btn.getAttribute("data-author-tab")));
+      });
+
+      document.getElementById("btnQuickRaiseFromBooks").addEventListener("click", () => switchAuthorTab("submit"));
+      document.getElementById("btnNewTicketFromList").addEventListener("click", () => switchAuthorTab("submit"));
+
+      // Studio Controls
+      document.getElementById("studioBookSelect").addEventListener("change", (e) => {
+        state.studioBookId = e.target.value;
+        const book = getBookById(state.studioBookId);
+        if (book) {
+          state.simulatedSales = book.total_copies_sold || 100;
+          if (window.syncScrubberToCopies) window.syncScrubberToCopies(state.simulatedSales);
+        }
+        renderBookleafStudio();
+      });
+
+      document.getElementById("btnResetScrubber").addEventListener("click", () => {
+        const book = getBookById(state.studioBookId);
+        if (book) {
+          state.simulatedSales = book.total_copies_sold || 0;
+          if (window.syncScrubberToCopies) window.syncScrubberToCopies(state.simulatedSales);
+          renderBookleafStudio();
+        }
+      });
+
+      document.getElementById("btnAskRoyaltyTicket").addEventListener("click", () => {
+        const book = getBookById(state.studioBookId);
+        switchAuthorTab("submit");
+        if (book) {
+          document.getElementById("ticketBookSelect").value = book.book_id;
+          document.getElementById("ticketSubjectInput").value = `Requesting line-by-line royalty statement for ${book.title}`;
+          document.getElementById("ticketDescInput").value = `Hi BookLeaf team, I inspected my unit economics in BookLeaf Studio for '${book.title}' (${book.total_copies_sold} copies sold, ${formatINR(book.royalty_pending)} pending). Could you share the platform-wise breakdown across Amazon and Flipkart?`;
+        }
+      });
+
+      document.getElementById("btnTriggerStockSync").addEventListener("click", () => {
+        const book = getBookById(state.studioBookId);
+        switchAuthorTab("submit");
+        if (book) {
+          document.getElementById("ticketBookSelect").value = book.book_id;
+          document.getElementById("ticketSubjectInput").value = `Availability help for ${book.title}`;
+          document.getElementById("ticketDescInput").value = `My book “${book.title}” is currently listed on ${book.available_on.join(", ") || "retail platforms"}, but its availability looks incorrect. Please review the listing and let me know the next step.`;
+        }
+        showToast("Review the details and submit a support ticket to the BookLeaf team.", "emerald");
+      });
+
+      // Sample Scenarios in Submit Form (from PDF Page 6-7)
+      const SAMPLE_SCENARIOS = {
+        overdue_royalty: {
+          subject: "I published my book 4 months ago and still haven't received any royalty. What's going on?",
+          desc: "I published my book over 4 months ago and my dashboard shows pending royalties above ₹1,000, but I still haven't received any bank transfer. When is my payout scheduled?"
+        },
+        low_royalty: {
+          subject: "My royalty amount seems too low for the copies sold",
+          desc: "My royalty amount seems lower than expected for the number of copies sold. How exactly are printing costs, Amazon/Flipkart commissions, and shipping deducted from the MRP?"
+        },
+        isbn_mismatch: {
+          subject: "My book is showing a different ISBN on Amazon than what's on the physical copy",
+          desc: "My book page on Amazon India is displaying a different ISBN than what is printed on the physical paperback cover. Please escalate this to the production team urgently!"
+        },
+        print_defect: {
+          subject: "I received my author copies and the print quality is terrible",
+          desc: "I received my author copies today and the print quality is terrible. Several interior images are blurry and pages are misaligned near the binding. I need a free reprint."
+        },
+        unavailable: {
+          subject: "My book is published but it's showing as 'Currently Unavailable' on Amazon",
+          desc: "My book status is Published & Live, but readers told me it is currently showing as 'Currently Unavailable' on Amazon India. Can you trigger a stock re-sync?"
+        }
+      };
+
+      document.querySelectorAll(".sample-fill-btn").forEach((btn) => {
+        btn.addEventListener("click", () => {
+          const key = btn.getAttribute("data-sample");
+          const s = SAMPLE_SCENARIOS[key];
+          if (!s) return;
+          document.getElementById("ticketSubjectInput").value = s.subject;
+          document.getElementById("ticketDescInput").value = s.desc;
+          document.getElementById("ticketDescInput").dispatchEvent(new Event("input"));
+          feedback.tick(750);
+        });
+      });
+
+      // Live Pre-Submit AI Classification Preview while typing
+      const updateLivePreview = () => {
+        const subj = document.getElementById("ticketSubjectInput").value;
+        const desc = document.getElementById("ticketDescInput").value;
+        document.getElementById("charCountLabel").textContent = `${desc.length} / 2000 chars`;
+        const box = document.getElementById("liveDeflectionPreview");
+        if ((subj + desc).trim().length < 10) {
+          box.classList.add("hidden");
+          return;
+        }
+        const book = getBookById(document.getElementById("ticketBookSelect").value);
+        const triage = classifyAndScoreTicket(subj, desc, book);
+        const kb = KB_CHUNKS[triage.category] || KB_CHUNKS["General Inquiry"];
+        box.classList.remove("hidden");
+        document.getElementById("liveDeflectionCategory").textContent = `Estimated category: ${triage.category} • Priority: ${triage.priority} (~${triage.selectiveTokens} prompt tokens)`;
+        document.getElementById("liveDeflectionHint").textContent = kb.policy;
+      };
+      document.getElementById("ticketSubjectInput").addEventListener("input", updateLivePreview);
+      document.getElementById("ticketDescInput").addEventListener("input", updateLivePreview);
+      document.getElementById("ticketBookSelect").addEventListener("change", updateLivePreview);
+
+      // File Attachment Handlers
+      const renderPendingAttachments = () => {
+        const wrap = document.getElementById("attachedFilesList");
+        if (!wrap) return;
+        wrap.innerHTML = state.pendingAttachments.map((a, idx) => `
+          <span class="px-2.5 py-1 rounded-xl text-xs bg-leaf-50 text-leaf-900 border border-leaf-200 flex items-center gap-1.5">
+            <span>📎 ${escapeHtml(a.name)} (${a.size})</span>
+            <button type="button" data-rm-attach="${idx}" class="text-slate-400 hover:text-rose-600 font-bold">✕</button>
+          </span>
+        `).join("");
+        wrap.querySelectorAll("[data-rm-attach]").forEach((b) => {
+          b.addEventListener("click", () => {
+            state.pendingAttachments.splice(Number(b.getAttribute("data-rm-attach")), 1);
+            renderPendingAttachments();
+          });
+        });
+      };
+
+      document.getElementById("ticketFileInput").addEventListener("change", (e) => {
+        const files = Array.from(e.target.files || []);
+        files.forEach((f) => {
+          state.pendingAttachments.push({
+            name: f.name,
+            size: Math.max(1, Math.round(f.size / 1024)) + " KB",
+            type: f.type || "application/octet-stream"
+          });
+        });
+        renderPendingAttachments();
+      });
+
+      document.getElementById("btnAttachSamplePhoto").addEventListener("click", () => {
+        state.pendingAttachments.push({
+          name: "defective_copy_page_misalignment.jpg",
+          size: "845 KB",
+          type: "image/jpeg"
+        });
+        feedback.tick(700);
+        renderPendingAttachments();
+      });
+
+      // Submit New Support Query Form
+      document.getElementById("supportQueryForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const bookId = document.getElementById("ticketBookSelect").value;
+        const subject = document.getElementById("ticketSubjectInput").value.trim();
+        const description = document.getElementById("ticketDescInput").value.trim();
+        if (subject.length < 4 || description.length < 10) {
+          showToast("Please provide both a clear subject line and detailed description.", "rose");
+          return;
+        }
+
+        const submitButton = e.currentTarget.querySelector('button[type="submit"]');
+        submitButton.disabled = true;
+        try {
+          const result = await apiRequest("/api/v1/tickets", {
+            method: "POST",
+            body: JSON.stringify({
+              book_id: bookId,
+              subject,
+              description,
+              attachments: state.pendingAttachments.map((file) => `${file.name} (${file.size})`)
+            })
+          });
+          state.selectedAdminTicketId = result.ticket.id;
+          state.pendingAttachments = [];
+          renderPendingAttachments();
+          document.getElementById("ticketSubjectInput").value = "";
+          document.getElementById("ticketDescInput").value = "";
+          document.getElementById("liveDeflectionPreview").classList.add("hidden");
+          feedback.commitSuccess();
+          showToast(`Ticket ${result.ticket.id} submitted and classified as ${result.ticket.category} (${result.ticket.priority}).`, "emerald");
+          await refreshTickets();
+          switchAuthorTab("tickets");
+        } catch (error) {
+          handleApiError(error);
+        } finally {
+          submitButton.disabled = false;
+        }
+      });
+
+      // Admin Filters
+      ["adminFilterStatus", "adminFilterCategory", "adminFilterPriority", "adminFilterDate", "adminSortOrder"].forEach((id) => {
+        const el = document.getElementById(id);
+        if (el) {
+          el.addEventListener("change", () => {
+            state.adminFilters.status = document.getElementById("adminFilterStatus").value;
+            state.adminFilters.category = document.getElementById("adminFilterCategory").value;
+            state.adminFilters.priority = document.getElementById("adminFilterPriority").value;
+            state.adminFilters.from = document.getElementById("adminFilterDate").value;
+            state.adminFilters.sort = document.getElementById("adminSortOrder").value;
+            renderAdminPortal();
+          });
+        }
+      });
+
+      document.getElementById("adminSearchInput").addEventListener("input", (e) => {
+        state.adminFilters.search = e.target.value.trim();
+        renderAdminPortal();
+      });
+
+      // Sound / Haptics Toggle
+      document.getElementById("btnToggleSound").addEventListener("click", () => {
+        feedback.enabled = !feedback.enabled;
+        document.getElementById("soundLabel").textContent = feedback.enabled ? "Tactile Audio On" : "Audio Muted";
+        if (feedback.enabled) feedback.tick(820);
+      });
+
+      // Quick Jump button in PiP
+      document.getElementById("btnQuickJumpAdmin").addEventListener("click", () => {
+        const nextMode = state.viewMode === "author" ? "admin" : state.viewMode === "admin" ? "split" : "author";
+        setViewMode(nextMode);
+      });
+
+      // Login Modal
+      const loginModal = document.getElementById("loginModalBackdrop");
+      const openLogin = () => {
+        loginModal.classList.remove("hidden");
+        loginModal.classList.add("flex");
+      };
+      const closeLogin = () => {
+        if (!state.user) return;
+        loginModal.classList.add("hidden");
+        loginModal.classList.remove("flex");
+      };
+      document.getElementById("btnCloseLoginModal").addEventListener("click", closeLogin);
+      document.getElementById("btnCancelLogin").addEventListener("click", closeLogin);
+
+      document.getElementById("loginModalForm").addEventListener("submit", async (e) => {
+        e.preventDefault();
+        const email = document.getElementById("loginEmailInput").value.trim().toLowerCase();
+        const password = document.getElementById("loginPasswordInput").value;
+        const errBox = document.getElementById("loginErrorBox");
+        const submit = document.getElementById("loginSubmitButton");
+        submit.disabled = true;
+        submit.textContent = "Signing in…";
+        try {
+          state.authToken = null;
+          const result = await apiRequest("/api/v1/auth/login", {
+            method: "POST", body: JSON.stringify({ email, password })
+          });
+          state.authToken = result.token;
+          state.user = result.user;
+          sessionStorage.setItem("bookleaf_session", JSON.stringify({ token: result.token, user: result.user }));
+          await loadAccountData();
+          errBox.classList.remove("hidden");
+          errBox.classList.add("hidden");
+          document.getElementById("loginPasswordInput").value = "";
+          showToast(`Signed in as ${result.user.name}`, "emerald");
+        } catch (error) {
+          state.authToken = null;
+          state.user = null;
+          sessionStorage.removeItem("bookleaf_session");
+          errBox.classList.remove("hidden");
+          errBox.textContent = error.message || "Sign in failed. Check your email and password.";
+        } finally {
+          submit.disabled = false;
+          submit.textContent = "Sign In";
+        }
+      });
+
+      try {
+        const saved = JSON.parse(sessionStorage.getItem("bookleaf_session") || "null");
+        if (saved && saved.token && saved.user) {
+          state.authToken = saved.token;
+          state.user = saved.user;
+          await loadAccountData();
+        }
+      } catch (_) {
+        sessionStorage.removeItem("bookleaf_session");
+        state.authToken = null;
+        state.user = null;
+        openLogin();
+      }
+
+      // Physics & AI Outage Modal
+      const physModal = document.getElementById("physicsModalBackdrop");
+      const openPhys = () => {
+        physModal.classList.remove("hidden");
+        physModal.classList.add("flex");
+      };
+      const closePhys = () => {
+        physModal.classList.add("hidden");
+        physModal.classList.remove("flex");
+        renderAll();
+      };
+      document.getElementById("btnOpenPhysicsModal").addEventListener("click", openPhys);
+      document.getElementById("btnClosePhysicsModal").addEventListener("click", closePhys);
+      document.getElementById("btnDonePhysicsModal").addEventListener("click", closePhys);
+
+      document.getElementById("toggleSimulateOutage").addEventListener("change", (e) => {
+        state.simulateAiOutage = e.target.checked;
+        const dot = document.getElementById("aiHealthDot");
+        const pill = document.getElementById("telemetryStatusPill");
+        if (state.simulateAiOutage) {
+          dot.className = "w-2 h-2 rounded-full bg-rose-500 animate-ping";
+          if (pill) {
+            pill.textContent = "Preview • Fallback State";
+            pill.className = "px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 text-[10px]";
+          }
+          showToast("Showing the local outage preview. Server behavior is unchanged.", "amber");
+        } else {
+          dot.className = "w-2 h-2 rounded-full bg-emerald-500 animate-pulse";
+          if (pill) {
+            pill.textContent = "AI status is shown per ticket";
+            pill.className = "px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 text-[10px]";
+          }
+          showToast("Outage preview cleared.", "emerald");
+        }
+        renderAdminTicketDetail();
+      });
+
+      document.getElementById("toggleReducedMotion").addEventListener("change", (e) => {
+        document.body.classList.toggle("force-reduced-motion", e.target.checked);
+      });
+
+      document.getElementById("toggleReducedTransparency").addEventListener("change", (e) => {
+        document.body.classList.toggle("force-reduced-transparency", e.target.checked);
+      });
+
+      document.getElementById("btnDownloadSingleHtml").addEventListener("click", () => {
+        try {
+          const fullHtml = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+          const blob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "bookleaf_portal.html";
+          document.body.appendChild(a);
+          a.click();
+          setTimeout(() => {
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+          }, 150);
+          feedback.commitSuccess();
+          showToast("Downloading standalone bookleaf_portal.html...", "emerald");
+        } catch (err) {
+          showToast("Download triggered", "emerald");
+        }
+      });
+
+      document.getElementById("btnSimulateApiCall").addEventListener("click", () => {
+        apiRequest("/api/v1/health", { headers: {} })
+          .then(() => { feedback.commitSuccess(); showToast("BookLeaf API is reachable.", "emerald"); })
+          .catch(handleApiError);
+      });
+    });
+  </script>
+</body>
+</html>

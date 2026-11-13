@@ -1,0 +1,111 @@
+openapi: 3.0.3
+info:
+  title: BookLeaf Publishing — Author Support & Operations REST API
+  version: 1.0.0
+  description: >
+    Role-scoped REST API for BookLeaf's Author Support & Communication Portal,
+    featuring selective-context AI triage, draft generation, and real-time SSE updates.
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+paths:
+  /api/v1/auth/login:
+    post:
+      summary: Authenticate an Author or Admin Operations user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, example: "priya.sharma@email.com" }
+                password: { type: string, example: "bookleaf123" }
+      responses:
+        '200':
+          description: Returns signed JWT and user profile
+  /api/v1/authors/me/books:
+    get:
+      summary: Get authenticated author's books, sales, and royalty breakdown
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Scoped list of books for req.user.sub
+        '401': { description: Missing or invalid bearer token }
+        '403': { description: Author role required }
+  /api/v1/authors:
+    get:
+      summary: List author and book records for the admin queue
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Seeded author and book records; admin only }
+        '403': { description: Admin role required }
+  /api/v1/tickets:
+    get:
+      summary: List tickets (Scoped to self for Authors; Full queue for Admins)
+      security: [{ BearerAuth: [] }]
+      parameters:
+        - in: query
+          name: status
+          schema: { type: string, enum: [Open, In Progress, Resolved, Closed] }
+        - in: query
+          name: category
+          schema: { type: string }
+        - in: query
+          name: priority
+          schema: { type: string, enum: [Critical, High, Medium, Low] }
+        - in: query
+          name: from
+          description: Include tickets created on or after this date (YYYY-MM-DD)
+          schema: { type: string, format: date }
+        - in: query
+          name: to
+          description: Include tickets created on or before this date (YYYY-MM-DD)
+          schema: { type: string, format: date }
+      responses:
+        '200':
+          description: Ticket list (internal_notes omitted for authors)
+    post:
+      summary: Submit a new support query with automatic AI classification & priority scoring
+      security: [{ BearerAuth: [] }]
+      responses:
+        '201':
+          description: Created ticket with AI triage metadata and pre-generated draft response
+  /api/v1/tickets/{id}/triage:
+    patch:
+      summary: Admin override for AI category, priority score, status, or specialist assignment
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200':
+          description: Updated ticket
+        '403': { description: Admin role required }
+  /api/v1/tickets/{id}/draft:
+    post:
+      summary: Regenerate and persist a policy-grounded AI response draft
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: Updated ticket with a server-generated draft }
+        '403': { description: Admin role required }
+        '404': { description: Ticket not found }
+  /api/v1/tickets/{id}/responses:
+    post:
+      summary: Append a public response or Admin-only internal note
+      security: [{ BearerAuth: [] }]
+      responses:
+        '201':
+          description: Updated conversation thread and broadcast real-time event
+  /api/v1/events:
+    get:
+      summary: Authenticated server-sent event stream, author-scoped for authors
+      security: [{ BearerAuth: [] }]
+      responses:
+        '200': { description: text/event-stream }
+  /api/v1/health:
+    get:
+      summary: Health check
+      responses:
+        '200': { description: Service is ready }

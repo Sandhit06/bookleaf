@@ -1,0 +1,7 @@
+node_modules/
+.env
+.env.*
+!.env.example
+backend/src/db/tickets.json
+backend/src/db/tickets.json.tmp
+npm-debug.log*
